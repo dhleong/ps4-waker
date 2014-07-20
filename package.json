@@ -1,0 +1,32 @@
+{
+  "name": "ps4-waker",
+  "description": "Wake your PS4 over LAN with help from the Playstation App",
+  "version": "0.1.0",
+  "author": "Daniel Leong",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/dhleong/ps4-waker"
+  },
+  "keywords": [
+    "ps4",
+    "wake",
+    "wol"
+  ],
+  "bin": {
+    "ps4-wake": "./bin/cmd.js"
+  },
+  "bugs": {
+    "url": "https://github.com/dhleong/ps4-waker/issues"
+  },
+  "preferGlobal": true,
+  "homepage": "https://github.com/dhleong/ps4-waker",
+  "dependencies": {
+    "minimist": "^0.1.0",
+    "node-arp": "^1.0.4",
+    "spoof": "^0.4.0"
+  }
+}
