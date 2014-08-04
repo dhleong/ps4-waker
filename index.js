@@ -64,6 +64,20 @@ Waker.prototype._doWake = function(device, callback) {
     });
 };
 
+/** 
+ * Write the creds dict to our credentials file.
+ * @param callback(err, creds) is called with the 
+ *  creds json again
+ */
+Waker.prototype.writeCredentials = function(creds, callback) {
+    fs.writeFile(this.credentials, JSON.stringify(creds), function(err) {
+        if (err) return callback(err);
+
+        callback(null, creds);
+    });
+};
+
+
 Waker.prototype.requestCredentials = function(callback) {
     var self = this;
     var dummy = new Dummy();
@@ -79,11 +93,7 @@ Waker.prototype.requestCredentials = function(callback) {
             if (err) return callback(err);
 
             creds.deviceMac = mac;
-            fs.writeFile(self.credentials, JSON.stringify(creds), function(err) {
-                if (err) return callback(err);
-
-                callback(null, creds);
-            });
+            self.writeCredentials(creds, callback);
         });
 
         dummy.close();
@@ -159,7 +169,9 @@ function powerCycleAirport(deviceName, callback) {
  *  so... let's make sure that happens
  */
 function ensureMac(deviceName, mac, port, callback) {
-    if (spoof.getInterfaceMAC(deviceName) == mac) 
+    // with psn creds, we won't have an expected mac,
+    //  so we won't need to spoof to it
+    if (!mac || spoof.getInterfaceMAC(deviceName) == mac) 
         return callback();
 
     if (process.getuid && process.getuid()) {
