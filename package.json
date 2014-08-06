@@ -27,6 +27,8 @@
   "dependencies": {
     "minimist": "^0.1.0",
     "node-arp": "^1.0.4",
-    "spoof": "^0.4.0"
+    "spoof": "^0.4.0",
+    "underscore": "^1.6.0",
+    "ursa": "^0.8.0"
   }
 }
