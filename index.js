@@ -65,7 +65,7 @@ Waker.prototype.readCredentials = function(callback) {
     fs.readFile(this.credentials, function(err, buf) {
         if (err) return callback(err);
         
-        callback(JSON.parse(buf.toString()));
+        callback(null, JSON.parse(buf.toString()));
     });
 };
 
