@@ -9,8 +9,8 @@ it is not necessary to own a Vita or to look at any packets with `ps4-waker`.
 ### Requirements
 
 - A PS4, of course
-- The Playstation App, installed and setup on your phone or tablet of choice
-- A computer with a network card whose MAC address can be spoofed
+- The Playstation App, installed on your phone or tablet of choice
+- A computer
 - All of the above on the same LAN
 
 ### Usage
@@ -32,11 +32,13 @@ Options:
   --device | -d                Specify IP address of a specific PS4
   --failfast                   Don't request credentials if none
   --timeout | -t               Timeout in milliseconds
+  --pin <pin-code>             Manual pin-code registration
 ```
 
 For most cases, simply run the executable with no arguments. On first run,
-you will be asked to connect to the "PS4-Waker" Playstation. After that, future
-executions should just work.
+you will be asked to connect to the "PS4-Waker" Playstation, and to turn on
+your PS4 and go to the "add devices" screen to get a pin code, and enter that. 
+After that, future executions should just work.
 
 ### How it works
 
@@ -44,14 +46,25 @@ In order to get the credentials, `ps4-waker` pretends to be another PS4 on your
 local network, responding to the right broadcasts with the appropriate messages,
 and simulating the connection handshake that the app makes with a real PS4.
 
-Then, it spoofs the mac address of the device that connected to it, as the PS4
-appears to match the credentials with the device. Finally, it simply sends the
-correct "wake" packet to the real PS4, and restores the original MAC address.
+With those in hand, `ps4-waker` connects to the real PS4 and communicates
+with the same TCP protocol the app uses to authenticate itself as a connected
+Device---it will show up as "PS4 Waker" in your device management.
+
+Once registered as a connected Device, it can simply send the correct "wake"
+packet with the initially-fetched credentials.
 
 ### Notes
 
-This has been tested on a MacBook Pro running the OSX Mavericks. Pull requests
-are welcome if extra twiddling is needed for smooth operation on Windows or Linux.
+This has been tested on a MacBook Pro running the OSX Mavericks. Using the new
+TCP connection, we don't need to do any wacky MAC spoofing, so any machine
+should work. Pull requests are welcome, however, if extra twiddling is needed 
+for smooth operation on Windows or Linux.
+
+The TCP connection API is exposed via `require('ps4-waker').Socket`, and the
+PS4 detection as `require('ps4-waker').Detector`. In the future, these may
+be broken out into a separate library, perhaps with more features from the app,
+such as "on screen keyboard" simulation. 
+See the sources in the lib directory for more information on these modules.
 
 ### Disclaimer
 
