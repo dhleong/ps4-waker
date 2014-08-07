@@ -17,7 +17,7 @@
     "wol"
   ],
   "bin": {
-    "ps4-wake": "./bin/cmd.js"
+    "ps4-waker": "./bin/cmd.js"
   },
   "bugs": {
     "url": "https://github.com/dhleong/ps4-waker/issues"
