@@ -43,6 +43,9 @@ if (argv.h || argv.help) {
     return;
 }
 
+if (argv.pin)
+    argv.pin = '' + argv.pin; // ensure it's a string
+
 var waker = new Waker(argv.credentials);
 
 function doWake() {
@@ -77,13 +80,17 @@ function doRegister(address, creds) {
                     process.exist(4);
                 }
 
-                sock.register(pin);
+                sock.login(pin);
             });
 
         } else {
             console.error("Unexpected error", packet.result, packet.error);
             process.exit(3);
         }
+    })
+    .on('error', function(err) {
+        console.error('Unable to connect to PS4 at', address, err);
+        process.exit(1);
     });
 }
 
