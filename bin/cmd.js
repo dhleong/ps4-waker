@@ -4,13 +4,13 @@ var Waker = require('../')
   , Detector = Waker.Detector
   , Socket = Waker.Socket
 
+  , DEFAULT_TIMEOUT = 5000
   , HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE
   , CREDS_DEFAULT = require('path').join(HOME, '.ps4-wake.credentials.json');
 
 var argv = require('minimist')(process.argv.slice(2), {
     default: {
         credentials: CREDS_DEFAULT
-      , timeout: 5000
       , pin: ''
     }
   , alias: {
@@ -30,6 +30,7 @@ if (argv.h || argv.help) {
     console.log('');
     console.log('Usage:');
     console.log('  ps4-waker [options]');
+    console.log('  ps4-waker search [-t]                       Search for devices');
     console.log('  ps4-waker --help | -h                       Shows this help message.');
     console.log('  ps4-waker --version | -v                    Show package version.');
     console.log('');
@@ -40,8 +41,42 @@ if (argv.h || argv.help) {
     console.log('  --timeout | -t               Timeout in milliseconds');
     console.log('  --pin <pin-code>             Manual pin-code registration');
     console.log('');
+    console.log('Searching:');
+    console.log('  If no timeout is provided to search, it will stop on the first result');
+    console.log('');
     return;
 }
+
+if (~argv._.indexOf('search')) {
+    var dumpDevice = function(err, device, rinfo) {
+        if (err) return console.error(err);
+        device.address = rinfo.address;
+        console.log(device);
+    };
+
+    if (argv.timeout) {
+        var detected = {};
+        new Detector()
+        .on('device', function(device, rinfo) {
+            if (detected[device.address])
+                return;
+
+            detected[device.address] = true;
+            this.removeAllListeners('close');
+            dumpDevice(null, device, rinfo);
+        })
+        .on('close', function() {
+            console.error("Could not detect any PS4 device");
+        })
+        .detect(argv.timeout);
+    } else {
+        Detector.findAny(DEFAULT_TIMEOUT, dumpDevice);
+    }
+    return;
+}
+
+if (argv.timeout === undefined)
+    argv.timeout = DEFAULT_TIMEOUT;
 
 if (argv.pin)
     argv.pin = '' + argv.pin; // ensure it's a string
