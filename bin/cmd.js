@@ -139,7 +139,7 @@ waker.on('need-credentials', function(targetDevice) {
     // just assume we need to register as well
     var address = targetDevice.address;
     Detector.find(address, argv.timeout, function(err, device) {
-        if (err || device.status != 'OK') {
+        if (err || device.status.toUpperCase() != 'OK') {
             console.error("Device must be awake for initial registration");
             process.exit(2);
         }
