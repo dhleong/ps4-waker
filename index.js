@@ -24,8 +24,9 @@ Waker.prototype.wake = function(timeout, device, callback) {
             timeout = DEFAULT_TIMEOUT;
     }
 
-    if (device)
+    if (device) {
         return this._doWake(device, callback);
+    }
 
     // get the first device we can find
     var self = this;
@@ -35,6 +36,7 @@ Waker.prototype.wake = function(timeout, device, callback) {
         var address = {
             address: rinfo.address
           , port: device['host-request-port']
+          , 'host-name': device['host-name']
         }
         self._doWake(address, callback);
     });
@@ -54,8 +56,9 @@ Waker.prototype._doWake = function(device, callback) {
         }
 
         // we have credentials!
-        if (device.status != 'Standby')
+        if (device.status != 'Standby') {
             return callback(new Error(device['host-name'] + ' is already awake!'));
+        }
 
         self.sendWake(device, creds, callback);
     });

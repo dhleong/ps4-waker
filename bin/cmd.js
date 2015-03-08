@@ -103,7 +103,10 @@ function doRegister(address, creds) {
         if (packet.result === 0) {
             console.log("Logged into device! Future uses should succeed");
             process.exit(0);
-        } else if (packet.error == "PIN_IS_NEEDED") {
+        } else if (packet.error == "PIN_IS_NEEDED"
+                || packet.error == "PASSCODE_IS_NEEDED") {
+            // NB: pincode auth seems to work just fine
+            //  even if passcode was requested. Shrug.
 
             // prompt the user
             require('readline').createInterface({
