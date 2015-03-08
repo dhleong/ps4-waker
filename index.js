@@ -33,12 +33,9 @@ Waker.prototype.wake = function(timeout, device, callback) {
     Detector.findAny(timeout, function(err, device, rinfo) {
         if (err) return callback(err);
 
-        var address = {
-            address: rinfo.address
-          , port: device['host-request-port']
-          , 'host-name': device['host-name']
-        }
-        self._doWake(address, callback);
+        device.address = rinfo.address;
+        device.port = device['host-request-port']
+        self._doWake(device, callback);
     });
 };
 
@@ -57,7 +54,11 @@ Waker.prototype._doWake = function(device, callback) {
 
         // we have credentials!
         if (device.status != 'Standby') {
-            return callback(new Error(device['host-name'] + ' is already awake!'));
+            return callback(new Error(device['host-name'] 
+                    + ' is already awake! ('
+                    + device.status
+                    + ')'
+            ));
         }
 
         self.sendWake(device, creds, callback);
