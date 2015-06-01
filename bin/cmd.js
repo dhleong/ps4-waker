@@ -31,6 +31,7 @@ if (argv.h || argv.help) {
     console.log('Usage:');
     console.log('  ps4-waker [options]');
     console.log('  ps4-waker search [-t]                       Search for devices');
+    console.log('  ps4-waker start [titleId]                   Start a specified title id');
     console.log('  ps4-waker --help | -h                       Shows this help message.');
     console.log('  ps4-waker --version | -v                    Show package version.');
     console.log('');
@@ -47,13 +48,22 @@ if (argv.h || argv.help) {
     return;
 }
 
+var action = null;
 if (~argv._.indexOf('search')) {
-    var dumpDevice = function(err, device, rinfo) {
+    action = function(err, device, rinfo) {
         if (err) return console.error(err);
         device.address = rinfo.address;
         console.log(device);
     };
+} else if (~argv._.indexOf('start')) {
+    var start = argv._.indexOf('start') + 1;
+    var title = argv._[start];
+    if (title) {
+        action = newTitleStarter(title);
+    }
+}
 
+if (action) {
     if (argv.timeout) {
         var detected = {};
         new Detector()
@@ -63,14 +73,14 @@ if (~argv._.indexOf('search')) {
 
             detected[device.address] = true;
             this.removeAllListeners('close');
-            dumpDevice(null, device, rinfo);
+            action(null, device, rinfo);
         })
         .on('close', function() {
             console.error("Could not detect any PS4 device");
         })
         .detect(argv.timeout);
     } else {
-        Detector.findAny(DEFAULT_TIMEOUT, dumpDevice);
+        Detector.findAny(DEFAULT_TIMEOUT, action);
     }
     return;
 }
@@ -186,4 +196,42 @@ if (argv.pin) {
 } else {
     // do it!
     doWake();
+}
+
+function newTitleStarter(title) {
+    return function(err, device, rinfo) {
+        if (err) return console.error(err);
+
+        var waker = new Waker(argv.credentials);
+        waker.readCredentials(function(err, creds) {
+            if (err) {
+                console.error("No credentials found");
+                return;
+            }
+
+            var sock = Socket({
+                accountId: creds['user-credential']
+              , host: rinfo.address
+              , pinCode: argv.pin
+              , debug: true
+            })
+            sock.on('login_result', function(packet) {
+                if (packet.result !== 0) {
+                    console.log("Error logging into device");
+                    process.exit(0);
+                    return;
+                }
+
+                console.log("Logged in; starting", title);
+                sock.startTitle2(title);
+                // sock.startTitle(title);
+            })
+            .on('error', function(err) {
+                console.error('Unable to connect to PS4 at', 
+                    rinfo.address, err);
+                process.exit(1);
+            });
+
+        });
+    }
 }
