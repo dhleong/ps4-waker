@@ -5,7 +5,7 @@ var Waker = require('../')
   , Socket = Waker.Socket
 
   , DEFAULT_TIMEOUT = 5000
-  , HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE
+  , HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE || ''
   , CREDS_DEFAULT = require('path').join(HOME, '.ps4-wake.credentials.json');
 
 var argv = require('minimist')(process.argv.slice(2), {
