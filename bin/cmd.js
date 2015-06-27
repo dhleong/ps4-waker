@@ -159,6 +159,14 @@ waker.on('need-credentials', function(targetDevice) {
     });
 });
 
+waker.on('device-notified', function() {
+    console.log("WAKEUP sent to device...");
+});
+
+waker.on('logging-in', function() {
+    console.log("Logging in...");
+});
+
 if (argv.pin) {
     // find the target machine and register
     var getCredsAndRegister = function(address) {
