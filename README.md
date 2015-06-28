@@ -1,10 +1,8 @@
 ps4-waker
 =========
 
-Wake your PS4 over LAN with help from the Playstation App. Acknowledgements
-to [Darryl Sokoloski](https://github.com/dsokoloski/ps4-wake) for his work
-with the basic wake packet structures, etc. Unlike his implementation, however,
-it is not necessary to own a Vita or to look at any packets with `ps4-waker`.
+Wake your PS4 over LAN (and a few other tricks) with help from 
+the Playstation App.
 
 ### Requirements
 
@@ -24,6 +22,9 @@ ps4-waker - Wake your PS4 (with help from the Playstation App)
 
 Usage:
   ps4-waker [options]
+  ps4-waker search [-t]                       Search for devices
+  ps4-waker standby [-d <ip>]                 Request the device enter standby/rest mode
+  ps4-waker start [titleId]                   Start a specified title id
   ps4-waker --help | -h                       Shows this help message.
   ps4-waker --version | -v                    Show package version.
 
@@ -33,6 +34,9 @@ Options:
   --failfast                   Don't request credentials if none
   --timeout | -t               Timeout in milliseconds
   --pin <pin-code>             Manual pin-code registration
+
+Searching:
+  If no timeout is provided to search, it will stop on the first result
 ```
 
 For most cases, simply run the executable with no arguments. On first run,
@@ -55,7 +59,7 @@ packet with the initially-fetched credentials.
 
 ### Notes
 
-This has been tested on a MacBook Pro running the OSX Mavericks. Using the new
+This has been tested on a MacBook Pro running the OSX Yosemite. Using the new
 TCP connection, we don't need to do any wacky MAC spoofing, so any machine
 should work. Pull requests are welcome, however, if extra twiddling is needed 
 for smooth operation on Windows or Linux.
@@ -65,6 +69,13 @@ PS4 detection as `require('ps4-waker').Detector`. In the future, these may
 be broken out into a separate library, perhaps with more features from the app,
 such as "on screen keyboard" simulation. 
 See the sources in the lib directory for more information on these modules.
+
+### Acknowledgements
+
+Acknowledgements
+to [Darryl Sokoloski](https://github.com/dsokoloski/ps4-wake) for his work
+with the basic wake packet structures, etc. Unlike his implementation, however,
+it is not necessary to own a Vita or to look at any packets with `ps4-waker`.
 
 ### Disclaimer
 
