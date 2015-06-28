@@ -31,6 +31,7 @@ if (argv.h || argv.help) {
     console.log('Usage:');
     console.log('  ps4-waker [options]');
     console.log('  ps4-waker search [-t]                       Search for devices');
+    console.log('  ps4-waker standby [-d <ip>]                 Request the device enter standby/rest mode');
     console.log('  ps4-waker start [titleId]                   Start a specified title id');
     console.log('  ps4-waker --help | -h                       Shows this help message.');
     console.log('  ps4-waker --version | -v                    Show package version.');
@@ -59,8 +60,25 @@ if (~argv._.indexOf('search')) {
     var start = argv._.indexOf('start') + 1;
     var title = argv._[start];
     if (title) {
-        action = newTitleStarter(title);
+        action = newSocketAction(function(sock) {
+            sock.startTitle(title, function(err) {
+                if (err) console.error(err);
+                else console.log("Started!");
+                process.exit(0);
+            });   
+        });
+    } else {
+        console.error("A title id must be started");
+        process.exit(1);
     }
+} else if (~argv._.indexOf('standby')) {
+    action = newSocketAction(function(sock) {
+        sock.requestStandby(function(err) {
+            if (err) console.error(err);
+            else console.log("Standby requested");
+            process.exit(0);
+        });
+    });
 }
 
 if (action) {
@@ -72,8 +90,11 @@ if (action) {
                 return;
 
             detected[device.address] = true;
-            this.removeAllListeners('close');
-            action(null, device, rinfo);
+
+            if (!argv.device || device.address == argv.device) {
+                this.removeAllListeners('close');
+                action(null, device, rinfo);
+            }
         })
         .on('close', function() {
             console.error("Could not detect any PS4 device");
@@ -198,7 +219,13 @@ if (argv.pin) {
     doWake();
 }
 
-function newTitleStarter(title) {
+/** 
+ * Returns an action that can will prepare
+ *  a Socket connection and hand it to your
+ *  callback. If we're unable to connect,
+ *  we'll simply quit
+ */
+function newSocketAction(callback) {
     return function(err, device, rinfo) {
         if (err) return console.error(err);
 
@@ -206,27 +233,17 @@ function newTitleStarter(title) {
         waker.readCredentials(function(err, creds) {
             if (err) {
                 console.error("No credentials found");
+                process.exit(1);
                 return;
             }
 
-            var sock = Socket({
+            Socket({
                 accountId: creds['user-credential']
               , host: rinfo.address
               , pinCode: argv.pin
-              , debug: true
-            })
-            sock.on('login_result', function(packet) {
-                if (packet.result !== 0) {
-                    console.log("Error logging into device");
-                    process.exit(0);
-                    return;
-                }
-
-                console.log("Logged in; starting", title);
-                sock.startTitle2(title);
-                // sock.startTitle(title);
-            })
-            .on('error', function(err) {
+            }).on('ready', function() {
+                callback(this);
+            }).on('error', function(err) {
                 console.error('Unable to connect to PS4 at', 
                     rinfo.address, err);
                 process.exit(1);
