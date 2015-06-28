@@ -31,6 +31,8 @@ if (argv.h || argv.help) {
     console.log('Usage:');
     console.log('  ps4-waker [options]');
     console.log('  ps4-waker search [-t]                       Search for devices');
+    console.log('  ps4-waker standby [-d <ip>]                 Request the device enter standby/rest mode');
+    console.log('  ps4-waker start [titleId]                   Start a specified title id');
     console.log('  ps4-waker --help | -h                       Shows this help message.');
     console.log('  ps4-waker --version | -v                    Show package version.');
     console.log('');
@@ -47,13 +49,39 @@ if (argv.h || argv.help) {
     return;
 }
 
+var action = null;
 if (~argv._.indexOf('search')) {
-    var dumpDevice = function(err, device, rinfo) {
+    action = function(err, device, rinfo) {
         if (err) return console.error(err);
         device.address = rinfo.address;
         console.log(device);
     };
+} else if (~argv._.indexOf('start')) {
+    var start = argv._.indexOf('start') + 1;
+    var title = argv._[start];
+    if (title) {
+        action = newSocketAction(function(sock) {
+            sock.startTitle(title, function(err) {
+                if (err) console.error(err);
+                else console.log("Started!");
+                process.exit(0);
+            });   
+        });
+    } else {
+        console.error("A title id must be started");
+        process.exit(1);
+    }
+} else if (~argv._.indexOf('standby')) {
+    action = newSocketAction(function(sock) {
+        sock.requestStandby(function(err) {
+            if (err) console.error(err);
+            else console.log("Standby requested");
+            process.exit(0);
+        });
+    });
+}
 
+if (action) {
     if (argv.timeout) {
         var detected = {};
         new Detector()
@@ -62,15 +90,18 @@ if (~argv._.indexOf('search')) {
                 return;
 
             detected[device.address] = true;
-            this.removeAllListeners('close');
-            dumpDevice(null, device, rinfo);
+
+            if (!argv.device || device.address == argv.device) {
+                this.removeAllListeners('close');
+                action(null, device, rinfo);
+            }
         })
         .on('close', function() {
             console.error("Could not detect any PS4 device");
         })
         .detect(argv.timeout);
     } else {
-        Detector.findAny(DEFAULT_TIMEOUT, dumpDevice);
+        Detector.findAny(DEFAULT_TIMEOUT, action);
     }
     return;
 }
@@ -194,4 +225,38 @@ if (argv.pin) {
 } else {
     // do it!
     doWake();
+}
+
+/** 
+ * Returns an action that can will prepare
+ *  a Socket connection and hand it to your
+ *  callback. If we're unable to connect,
+ *  we'll simply quit
+ */
+function newSocketAction(callback) {
+    return function(err, device, rinfo) {
+        if (err) return console.error(err);
+
+        var waker = new Waker(argv.credentials);
+        waker.readCredentials(function(err, creds) {
+            if (err) {
+                console.error("No credentials found");
+                process.exit(1);
+                return;
+            }
+
+            Socket({
+                accountId: creds['user-credential']
+              , host: rinfo.address
+              , pinCode: argv.pin
+            }).on('ready', function() {
+                callback(this);
+            }).on('error', function(err) {
+                console.error('Unable to connect to PS4 at', 
+                    rinfo.address, err);
+                process.exit(1);
+            });
+
+        });
+    }
 }
