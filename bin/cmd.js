@@ -149,7 +149,7 @@ function doRegister(address, creds) {
             }).question("Pin code> ", function(pin) {
                 if (!pin) {
                     console.error("Pin is required");
-                    process.exist(4);
+                    process.exit(4);
                 }
 
                 sock.login(pin);
