@@ -139,6 +139,9 @@ function doRegister(address, creds) {
             // NB: pincode auth seems to work just fine
             //  even if passcode was requested. Shrug.
 
+            console.log("Go to 'Settings -> PlayStation(R) App Connection Settings -> Add Device'" +
+                " on your PS4 to obtain the PIN code.");
+
             // prompt the user
             require('readline').createInterface({
                 input: process.stdin
