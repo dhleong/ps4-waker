@@ -128,6 +128,7 @@ Waker.prototype._whenAwake = function(device, timeout, callback) {
     var start = new Date().getTime();
     var self = this;
     var loop = function(err, d) {
+        d = d || {};
         if (d.statusLine != ps4lib.STATUS_AWAKE) {
             var now = new Date().getTime();
             var delta = now - start;
@@ -148,7 +149,7 @@ Waker.prototype._whenAwake = function(device, timeout, callback) {
     }
 
     // begin the loop
-    loop(null, {});
+    loop(null);
 }
 
 // NB: weird arg order due to binding
