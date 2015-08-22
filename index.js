@@ -9,7 +9,7 @@ var util = require('util')
   , newSocket = require('./lib/ps4socket')
   
   , DEFAULT_TIMEOUT = 5000
-  , WAIT_FOR_WAKE = 15000
+  , WAIT_FOR_WAKE = 30000
   , MAX_RETRIES = 5
   , CRED_KEYS = ['client-type', 'auth-type', 'user-credential'];
 
