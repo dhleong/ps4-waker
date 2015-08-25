@@ -173,7 +173,6 @@ Waker.prototype._login = function(device, creds, callback, err) {
         accountId: creds['user-credential']
       , host: device.address
       , pinCode: '' // assume we're registered...?
-      , debug: true
     });
     socket.retries = 0;
     socket.on('login_result', function(packet) {
