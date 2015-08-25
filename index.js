@@ -20,7 +20,7 @@ function Waker(credentials, config) {
     this.config = _.extend({
         autoLogin: true
       , errorIfAwake: true
-      , keepSocket: true
+      , keepSocket: false
     }, config);
 }
 util.inherits(Waker, events.EventEmitter);
