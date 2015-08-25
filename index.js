@@ -3,6 +3,7 @@ var util = require('util')
   , events = require('events')
   , fs = require('fs')
   
+  , _ = require('underscore')
   , Detector = require('./lib/detector')
   , Dummy = require('./lib/dummy')
   , ps4lib = require('./lib/ps4lib')
@@ -13,8 +14,13 @@ var util = require('util')
   , MAX_RETRIES = 5
   , CRED_KEYS = ['client-type', 'auth-type', 'user-credential'];
 
-function Waker(credentials) {
+function Waker(credentials, config) {
     this.credentials = credentials;
+
+    this.config = _.extend({
+        autoLogin: true
+      , keepSocket: true
+    }, config);
 }
 util.inherits(Waker, events.EventEmitter);
 
@@ -155,7 +161,12 @@ Waker.prototype._whenAwake = function(device, timeout, callback) {
 // NB: weird arg order due to binding
 Waker.prototype._login = function(device, creds, callback, err) {
     if (err) return callback(err);
+    if (!this.config.autoLogin) {
+        callback();
+        return;
+    }
 
+    var self = this;
     this.emit('logging-in', device);
     var socket = newSocket({
         accountId: creds['user-credential']
@@ -167,8 +178,13 @@ Waker.prototype._login = function(device, creds, callback, err) {
         if (packet.result !== 0) {
             console.error("Login error:", packet.error);
         }
-        this.close();
-        callback(null);
+
+        if (self.config.keepSocket) {
+            callback(null, socket);
+        } else {
+            this.close();
+            callback(null);
+        }
     }).on('error', function(err) {
         if (socket.retries++ < MAX_RETRIES && err.code == 'ECONNREFUSED') {
             console.warn("Login connect refused; retrying soon");
