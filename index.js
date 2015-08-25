@@ -19,6 +19,7 @@ function Waker(credentials, config) {
 
     this.config = _.extend({
         autoLogin: true
+      , errorIfAwake: true
       , keepSocket: true
     }, config);
 }
@@ -62,7 +63,7 @@ Waker.prototype._doWake = function(device, callback) {
         }
 
         // we have credentials!
-        if (device.status != 'Standby') {
+        if (device.status != 'Standby' && self.config.errorIfAwake) {
             return callback(new Error(device['host-name'] 
                     + ' is already awake! ('
                     + device.status
