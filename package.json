@@ -1,7 +1,7 @@
 {
   "name": "ps4-waker",
   "description": "Wake your PS4 over LAN with help from the Playstation App",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "author": "Daniel Leong",
   "main": "index.js",
   "scripts": {
