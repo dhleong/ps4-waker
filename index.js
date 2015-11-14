@@ -78,10 +78,9 @@ Waker.prototype._doWake = function(device, callback) {
 
 Waker.prototype.readCredentials = function(callback) {
     
-    if (this.credentials !== null && typeof this.credentials === 'object') {
+    if (this.credentials !== null && typeof(this.credentials) === 'object') {
         callback(null, this.credentials);
-    }
-    else {
+    } else {
         fs.readFile(this.credentials, function(err, buf) {
             if (err) return callback(err);
             
