@@ -231,7 +231,7 @@ if (argv.pin) {
 }
 
 /** 
- * Returns an action that can will prepare
+ * Returns an action that will prepare
  *  a Socket connection and hand it to your
  *  callback. If we're unable to connect,
  *  we'll simply quit
