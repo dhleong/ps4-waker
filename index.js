@@ -81,7 +81,7 @@ util.inherits(Waker, events.EventEmitter);
  *                 on the configuration (see the config param
  *                 on the Waker constructor)
  */
-Waker.prototype.wake = function(timeout, device, callback) {
+Waker.prototype.wake = function(timeout,bindaddr, device, callback) {
 
     // fix up/validate input
     if (typeof(timeout) != 'number') {
@@ -99,21 +99,21 @@ Waker.prototype.wake = function(timeout, device, callback) {
 
     // already got your device? just wake it
     if (device) {
-        return this._doWake(device, callback);
+        return this._doWake(device,bindaddr, callback);
     }
 
     // get the first device we can find
     var self = this;
-    Detector.findAny(timeout, function(err, device, rinfo) {
+    Detector.findAny(timeout,bindaddr, function(err, device, rinfo) {
         if (err) return callback(err);
 
         device.address = rinfo.address;
         device.port = device['host-request-port']
-        self._doWake(device, callback);
+        self._doWake(device,bindaddr, callback);
     });
 };
 
-Waker.prototype._doWake = function(device, callback) {
+Waker.prototype._doWake = function(device,bindaddr, callback) {
 
     var self = this;
     this.readCredentials(function(err, creds) {
@@ -122,7 +122,7 @@ Waker.prototype._doWake = function(device, callback) {
             return;
         } else if (err) {
             // no listeners? just hop to it
-            self.requestCredentials(self._doWake.bind(self, device, callback));
+            self.requestCredentials(self._doWake.bind(self,bindaddr,device, callback));
             return;
         }
 
@@ -135,7 +135,7 @@ Waker.prototype._doWake = function(device, callback) {
             ));
         }
 
-        self.sendWake(device, creds, callback);
+        self.sendWake(device,bindaddr, creds, callback);
     });
 };
 
@@ -229,7 +229,7 @@ Waker.prototype.requestCredentials = function(callback) {
  *              file path will not work here.
  * @param callback @see wake()
  */
-Waker.prototype.sendWake = function(device, creds, callback) {
+Waker.prototype.sendWake = function(device, bindaddr, creds, callback) {
 
     // make sure to use standard port
     device.port = ps4lib.DDP_PORT;
@@ -237,17 +237,20 @@ Waker.prototype.sendWake = function(device, creds, callback) {
     // send the wake command
     var self = this;
     this.udp = ps4lib.udpSocket();
-    this.udp.bind(function() {
+
+    console.log("Awake "+bindaddr);
+    this.udp.bind({
+                address: bindaddr} , function() {
         self.udp.setBroadcast(true); // maybe?
 
         self.udp.discover("WAKEUP", creds, device);
-        self._whenAwake(device, 
-            WAIT_FOR_WAKE,
+        self._whenAwake(device,
+            WAIT_FOR_WAKE, bindaddr,
             self._login.bind(self, device, creds, callback));
     });
 }
 
-Waker.prototype._whenAwake = function(device, timeout, callback) {
+Waker.prototype._whenAwake = function(device, timeout,bindaddr, callback) {
     this.emit('device-notified', device);
 
     var statusCheckDelay = 1000;
@@ -261,7 +264,7 @@ Waker.prototype._whenAwake = function(device, timeout, callback) {
             var newTimeout = timeout - delta - statusCheckDelay;
             if (newTimeout > 0) {
                 setTimeout(function() {
-                    Detector.find(device.address, newTimeout, loop);
+                    Detector.find(device.address,newTimeout,bindaddr, loop);
                 }, statusCheckDelay);
             } else {
                 self.udp.close();

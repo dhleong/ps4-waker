@@ -17,6 +17,7 @@ var argv = require('minimist')(process.argv.slice(2), {
         credentials: 'c'
       , device: 'd'
       , timeout: 't'
+      , bind: 'b'
     }
 });
 
@@ -37,6 +38,7 @@ if (argv.h || argv.help) {
     console.log('  ps4-waker --version | -v                    Show package version.');
     console.log('');
     console.log('Options:');
+    console.log('  --bind | -b           Bind a specific ip');
     console.log('  --credentials | -c           Specify credentials file');
     console.log('  --device | -d                Specify IP address of a specific PS4');
     console.log('  --failfast                   Don\'t request credentials if none');
@@ -81,6 +83,9 @@ if (~argv._.indexOf('search')) {
     });
 }
 
+if (argv.bind === undefined)
+    argv.bind = "0.0.0.0";
+
 if (action) {
     if (argv.timeout) {
         var detected = {};
@@ -99,9 +104,9 @@ if (action) {
         .on('close', function() {
             console.error("Could not detect any PS4 device");
         })
-        .detect(argv.timeout);
+        .detect(argv.timeout,argv.bind);
     } else {
-        Detector.findAny(DEFAULT_TIMEOUT, action);
+        Detector.findAny(DEFAULT_TIMEOUT,argv.bind, action);
     }
     return;
 }
@@ -116,7 +121,7 @@ var waker = new Waker(argv.credentials);
 
 function doWake() {
     var device = argv.device ? {address: argv.device} : undefined;
-    waker.wake(argv.timeout, device, function(err) {
+    waker.wake(argv.timeout,argv.bind, device, function(err) {
         if (err) return console.error(err);
 
         console.log("Done!");
@@ -175,7 +180,7 @@ waker.on('need-credentials', function(targetDevice) {
 
     // just assume we need to register as well
     var address = targetDevice.address;
-    Detector.find(address, argv.timeout, function(err, device) {
+    Detector.find(address, argv.timeout, argv.bind, function(err, device) {
         if (err || device.status.toUpperCase() != 'OK') {
             console.error("Device must be awake for initial registration");
             process.exit(2);
