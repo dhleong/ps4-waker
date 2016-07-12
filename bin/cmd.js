@@ -38,7 +38,7 @@ if (argv.h || argv.help) {
     console.log('  ps4-waker --version | -v                    Show package version.');
     console.log('');
     console.log('Options:');
-    console.log('  --bind | -b           Bind a specific ip');
+    console.log('  --bind | -b                  Bind to a specific ip, if you have multiple');
     console.log('  --credentials | -c           Specify credentials file');
     console.log('  --device | -d                Specify IP address of a specific PS4');
     console.log('  --failfast                   Don\'t request credentials if none');
@@ -50,6 +50,11 @@ if (argv.h || argv.help) {
     console.log('');
     return;
 }
+
+var detectOpts = {
+    timeout: argv.timeout,
+    bindAddress: argv.bind
+};
 
 var action = null;
 if (~argv._.indexOf('search')) {
@@ -83,9 +88,6 @@ if (~argv._.indexOf('search')) {
     });
 }
 
-if (argv.bind === undefined)
-    argv.bind = "0.0.0.0";
-
 if (action) {
     if (argv.timeout) {
         var detected = {};
@@ -104,9 +106,10 @@ if (action) {
         .on('close', function() {
             console.error("Could not detect any PS4 device");
         })
-        .detect(argv.timeout,argv.bind);
+        .detect(detectOpts);
     } else {
-        Detector.findAny(DEFAULT_TIMEOUT,argv.bind, action);
+        detectOpts.timeout = DEFAULT_TIMEOUT;
+        Detector.findAny(detectOpts, action);
     }
     return;
 }
@@ -121,7 +124,7 @@ var waker = new Waker(argv.credentials);
 
 function doWake() {
     var device = argv.device ? {address: argv.device} : undefined;
-    waker.wake(argv.timeout,argv.bind, device, function(err) {
+    waker.wake(detectOpts, device, function(err) {
         if (err) return console.error(err);
 
         console.log("Done!");
@@ -180,7 +183,7 @@ waker.on('need-credentials', function(targetDevice) {
 
     // just assume we need to register as well
     var address = targetDevice.address;
-    Detector.find(address, argv.timeout, argv.bind, function(err, device) {
+    Detector.find(address, detectOpts, function(err, device) {
         if (err || device.status.toUpperCase() != 'OK') {
             console.error("Device must be awake for initial registration");
             process.exit(2);
@@ -198,8 +201,8 @@ waker.on('need-credentials', function(targetDevice) {
     });
 });
 
-waker.on('device-notified', function() {
-    console.log("WAKEUP sent to device...");
+waker.on('device-notified', function(device) {
+    console.log("WAKEUP sent to device...", device.address);
 });
 
 waker.on('logging-in', function() {

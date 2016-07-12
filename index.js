@@ -61,9 +61,8 @@ util.inherits(Waker, events.EventEmitter);
 
 /**
  * Attempt to wake a specific PS4, or any PS4.
- * @param timeout (optional; default: 5000) How long to wait
- *                in milliseconds for the PS4 detection. If
- *                you provide a device, this is ignored
+ * @param detectOpts @see Detector#detect(); If you provide a 
+ *                   device, any `timeout` set in this is ignored
  * @param device (optional) A device object. If not provided,
  *               we will attempt to locate *any* PS4 and wake
  *               the first one found within `timeout`. Should
@@ -81,15 +80,28 @@ util.inherits(Waker, events.EventEmitter);
  *                 on the configuration (see the config param
  *                 on the Waker constructor)
  */
-Waker.prototype.wake = function(timeout,bindaddr, device, callback) {
+Waker.prototype.wake = function(detectOpts, device, callback) {
 
     // fix up/validate input
-    if (typeof(timeout) != 'number') {
+    if (!(typeof(detectOpts) === 'number'
+        || typeof(callback) === 'function'
+        || (typeof(detectOpts) === 'object'
+            && device
+            && (device['host-name'] || typeof(device) === 'function')))) {
+        // thanks to backwards compat, this is a bit gross. In other words,
+        // detectOpts was definitely provided IFF it's a number OR it's
+        // an object and: callback is a function OR 
+        // device is a function (IE: `device` was actually
+        // omitted and we were called as `wake(opts, callback)`) OR
+        // device has the `host-name` field, which should be returned by
+        // the PS4 in a `device` object.
+        // If neither of these cases were true, no opts were provided,
+        // we have to shift the args, and detectOpts can just be `undefined`
         callback = device;
-        device = timeout;
-        timeout = DEFAULT_TIMEOUT;
+        device = detectOpts;
+        detectOpts = undefined;
     }
-    if (typeof(device) == 'function') {
+    if (typeof(device) === 'function') {
         callback = device;
         device = undefined;
     }
@@ -99,21 +111,21 @@ Waker.prototype.wake = function(timeout,bindaddr, device, callback) {
 
     // already got your device? just wake it
     if (device) {
-        return this._doWake(device,bindaddr, callback);
+        return this._doWake(device, detectOpts, callback);
     }
 
     // get the first device we can find
     var self = this;
-    Detector.findAny(timeout,bindaddr, function(err, device, rinfo) {
+    Detector.findAny(detectOpts, function(err, device, rinfo) {
         if (err) return callback(err);
 
         device.address = rinfo.address;
         device.port = device['host-request-port']
-        self._doWake(device,bindaddr, callback);
+        self._doWake(device, detectOpts, callback);
     });
 };
 
-Waker.prototype._doWake = function(device,bindaddr, callback) {
+Waker.prototype._doWake = function(device, detectOpts, callback) {
 
     var self = this;
     this.readCredentials(function(err, creds) {
@@ -122,7 +134,7 @@ Waker.prototype._doWake = function(device,bindaddr, callback) {
             return;
         } else if (err) {
             // no listeners? just hop to it
-            self.requestCredentials(self._doWake.bind(self,bindaddr,device, callback));
+            self.requestCredentials(self._doWake.bind(self, device, detectOpts, callback));
             return;
         }
 
@@ -135,7 +147,7 @@ Waker.prototype._doWake = function(device,bindaddr, callback) {
             ));
         }
 
-        self.sendWake(device,bindaddr, creds, callback);
+        self.sendWake(device, detectOpts, creds, callback);
     });
 };
 
@@ -224,12 +236,26 @@ Waker.prototype.requestCredentials = function(callback) {
  *  probably prefer wake()
  *
  * @param device Device object (@see wake())
+ * @param detectOpts @see Detector#detect()
  * @param creds Credentials object, as in the Waker constructor.
  *              It MUST be the inflated object, however; a string
  *              file path will not work here.
  * @param callback @see wake()
  */
-Waker.prototype.sendWake = function(device, bindaddr, creds, callback) {
+Waker.prototype.sendWake = function(device, detectOpts, creds, callback) {
+
+    if (!detectOpts || typeof(detectOpts) === 'number') {
+        detectOpts = {
+            timeout: detectOpts
+        };
+    } else if (detectOpts && typeof(detectOpts) !== 'object') {
+        // not undefined, not a number, and not an object.
+        // barf all over the input
+        throw new Error("Illegal value for detectOpts: " + detectOpts);
+    }
+
+    // override any provided timeout
+    detectOpts.timeout = WAIT_FOR_WAKE;
 
     // make sure to use standard port
     device.port = ps4lib.DDP_PORT;
@@ -238,19 +264,16 @@ Waker.prototype.sendWake = function(device, bindaddr, creds, callback) {
     var self = this;
     this.udp = ps4lib.udpSocket();
 
-    console.log("Awake "+bindaddr);
-    this.udp.bind({
-                address: bindaddr} , function() {
+    this.udp.bind(undefined, detectOpts.bindAddress, function() {
         self.udp.setBroadcast(true); // maybe?
 
         self.udp.discover("WAKEUP", creds, device);
-        self._whenAwake(device,
-            WAIT_FOR_WAKE, bindaddr,
+        self._whenAwake(device, detectOpts,
             self._login.bind(self, device, creds, callback));
     });
 }
 
-Waker.prototype._whenAwake = function(device, timeout,bindaddr, callback) {
+Waker.prototype._whenAwake = function(device, detectOpts, callback) {
     this.emit('device-notified', device);
 
     var statusCheckDelay = 1000;
@@ -261,10 +284,11 @@ Waker.prototype._whenAwake = function(device, timeout,bindaddr, callback) {
         if (d.statusLine != ps4lib.STATUS_AWAKE) {
             var now = new Date().getTime();
             var delta = now - start;
-            var newTimeout = timeout - delta - statusCheckDelay;
+            var newTimeout = detectOpts.timeout - delta - statusCheckDelay;
             if (newTimeout > 0) {
+                detectOpts.timeout = newTimeout;
                 setTimeout(function() {
-                    Detector.find(device.address,newTimeout,bindaddr, loop);
+                    Detector.find(device.address, detectOpts, loop);
                 }, statusCheckDelay);
             } else {
                 self.udp.close();
