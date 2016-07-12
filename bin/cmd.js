@@ -93,13 +93,13 @@ if (action) {
         var detected = {};
         new Detector()
         .on('device', function(device, rinfo) {
-            if (detected[device.address])
-                return;
+            if (detected[device['host-id']]) return;
 
-            detected[device.address] = true;
+            detected[device['host-id']] = true;
 
-            if (!argv.device || device.address == argv.device) {
+            if (!argv.device || rinfo.address == argv.device) {
                 this.removeAllListeners('close');
+                this.close();
                 action(null, device, rinfo);
             }
         })

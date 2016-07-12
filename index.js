@@ -139,7 +139,7 @@ Waker.prototype._doWake = function(device, detectOpts, callback) {
         }
 
         // we have credentials!
-        if (device.status != 'Standby' && self.config.errorIfAwake) {
+        if (device.status && device.status != 'Standby' && self.config.errorIfAwake) {
             return callback(new Error(device['host-name'] 
                     + ' is already awake! ('
                     + device.status
