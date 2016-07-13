@@ -97,10 +97,14 @@ if (action) {
 
             detected[device['host-id']] = true;
 
-            if (!argv.device || rinfo.address == argv.device) {
+            var deviceFound = rinfo.address == argv.device;
+            if (!argv.device || deviceFound) {
                 this.removeAllListeners('close');
-                this.close();
                 action(null, device, rinfo);
+
+                if (deviceFound) {
+                    this.close();
+                }
             }
         })
         .on('close', function() {
