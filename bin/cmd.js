@@ -38,7 +38,7 @@ if (argv.h || argv.help) {
     console.log('  ps4-waker --version | -v                    Show package version.');
     console.log('');
     console.log('Options:');
-    console.log('  --bind | -b                  Bind to a specific ip, if you have multiple');
+    console.log('  --bind | -b                  Bind to a specific network adapter IP, if you have multiple');
     console.log('  --credentials | -c           Specify credentials file');
     console.log('  --device | -d                Specify IP address of a specific PS4');
     console.log('  --failfast                   Don\'t request credentials if none');

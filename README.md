@@ -29,7 +29,7 @@ Usage:
   ps4-waker --version | -v                    Show package version.
 
 Options:
-  --bind | -b                  Bind to a specific ip, if you have multiple
+  --bind | -b                  Bind to a specific network adapter IP, if you have multiple
   --credentials | -c           Specify credentials file
   --device | -d                Specify IP address of a specific PS4
   --failfast                   Don't request credentials if none
