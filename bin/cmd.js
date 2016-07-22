@@ -86,6 +86,22 @@ if (~argv._.indexOf('search')) {
             process.exit(0);
         });
     });
+} else if (~argv._.indexOf('remote')) {
+    action = newSocketAction(function(sock) {
+        // give it some time to think---if we try to OPEN_RC
+        //  too soon after connecting, the ps4 seems to disregard
+        setTimeout(function() {
+            console.log("Remote key event sent");
+            sock.remoteControl(Socket.RCKeys.OPEN_RC);
+            sock.remoteControl(Socket.RCKeys.PS);
+
+            // give it plenty of time to send the packet before quitting
+            setTimeout(function() {
+                sock.remoteControl(Socket.RCKeys.CLOSE_RC);
+                process.exit(0);
+            }, 1000);
+        }, 500);
+    });
 }
 
 if (action) {
