@@ -25,6 +25,7 @@
   "preferGlobal": true,
   "homepage": "https://github.com/dhleong/ps4-waker",
   "dependencies": {
+    "async": "^2.0.1",
     "minimist": "^0.1.0",
     "q": "^1.0.1",
     "underscore": "^1.6.0",

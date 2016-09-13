@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-var Waker = require('../')
+var async = require('async')
+  , Waker = require('../')
   , Detector = Waker.Detector
   , Socket = Waker.Socket
 
@@ -31,6 +32,7 @@ if (argv.h || argv.help) {
     console.log('');
     console.log('Usage:');
     console.log('  ps4-waker [options]');
+    console.log('  ps4-waker remote <key-name> (...<key-name>) Send remote key-press event(s)');
     console.log('  ps4-waker search [-t]                       Search for devices');
     console.log('  ps4-waker standby [-d <ip>]                 Request the device enter standby/rest mode');
     console.log('  ps4-waker start [titleId]                   Start a specified title id');
@@ -47,6 +49,13 @@ if (argv.h || argv.help) {
     console.log('');
     console.log('Searching:');
     console.log('  If no timeout is provided to search, it will stop on the first result');
+    console.log('');
+    console.log('Key names:');
+    console.log('  Button names are case insensitive, and can be one of:');
+    console.log('    up, down, left, right, enter, back, option, ps');
+    console.log('  You cannot send the actual x, square, etc. buttons');
+    console.log('  A string of key presses may be provided, separated by spaces,');
+    console.log('   and they will be sent sequentially.');
     console.log('');
     return;
 }
@@ -87,20 +96,40 @@ if (~argv._.indexOf('search')) {
         });
     });
 } else if (~argv._.indexOf('remote')) {
+    var remote = argv._.indexOf('remote') + 1;
+    var keyNames = argv._.slice(remote).map((key) => key.toUpperCase());
+
+    var invalid = keyNames.filter((key) => !(key in Socket.RCKeys));
+    if (invalid.length) {
+        console.error("Unknown key names: ", invalid);
+        process.exit(1);
+        return;
+    }
+
+    var queue = ["OPEN_RC"]
+        .concat(keyNames)
+        .concat(["CLOSE_RC"]);
+
     action = newSocketAction(function(sock) {
         // give it some time to think---if we try to OPEN_RC
         //  too soon after connecting, the ps4 seems to disregard
         setTimeout(function() {
-            console.log("Remote key event sent");
-            sock.remoteControl(Socket.RCKeys.OPEN_RC);
-            sock.remoteControl(Socket.RCKeys.PS);
+            // send each key in series, with a delay in between
+            async.forEachSeries(queue, (key, cb) => {
+                var val = Socket.RCKeys[key];
+                sock.remoteControl(val);
+                setTimeout(cb, val == Socket.RCKeys.PS
+                    ? 1000 // higher delay after PS button press
+                    : 200); // too much lower and it becomes unreliable
 
-            // give it plenty of time to send the packet before quitting
-            setTimeout(function() {
-                sock.remoteControl(Socket.RCKeys.CLOSE_RC);
+                if (!key.endsWith("_RC")) {
+                    console.log("Sent", key);
+                }
+            }, (err) => {
+                console.log("Remote key events sent");
                 process.exit(0);
-            }, 1000);
-        }, 500);
+            });
+        }, 1500);
     });
 }
 
