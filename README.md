@@ -22,10 +22,11 @@ ps4-waker - Wake your PS4 (with help from the Playstation App)
 
 Usage:
   ps4-waker [options]
+  ps4-waker remote <key-name> (...<key-name>) Send remote key-press event(s)
   ps4-waker search [-t]                       Search for devices
   ps4-waker standby [-d <ip>]                 Request the device enter standby/rest mode
   ps4-waker start [titleId]                   Start a specified title id
-  ps4-waker --help | -h                       Shows this help message.
+  ps4-waker --help | -h | -?                  Shows this help message.
   ps4-waker --version | -v                    Show package version.
 
 Options:
@@ -38,6 +39,13 @@ Options:
 
 Searching:
   If no timeout is provided to search, it will stop on the first result
+
+Key names:
+  Button names are case insensitive, and can be one of:
+    up, down, left, right, enter, back, option, ps
+  You cannot send the actual x, square, etc. buttons
+  A string of key presses may be provided, separated by spaces,
+   and they will be sent sequentially.
 ```
 
 For most cases, simply run the executable with no arguments. On first run,

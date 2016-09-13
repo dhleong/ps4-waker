@@ -27,7 +27,7 @@ if (argv.v || argv.version) {
     return;
 }
 
-if (argv.h || argv.help) {
+if (argv.h || argv.help || argv['?']) {
     console.log('ps4-waker - Wake your PS4 (with help from the Playstation App)');
     console.log('');
     console.log('Usage:');
@@ -36,7 +36,7 @@ if (argv.h || argv.help) {
     console.log('  ps4-waker search [-t]                       Search for devices');
     console.log('  ps4-waker standby [-d <ip>]                 Request the device enter standby/rest mode');
     console.log('  ps4-waker start [titleId]                   Start a specified title id');
-    console.log('  ps4-waker --help | -h                       Shows this help message.');
+    console.log('  ps4-waker --help | -h | -?                  Shows this help message.');
     console.log('  ps4-waker --version | -v                    Show package version.');
     console.log('');
     console.log('Options:');
