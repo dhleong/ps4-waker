@@ -18,27 +18,35 @@ the Playstation App.
 Installing globally provides the `ps4-waker` executable:
 
 ```
-ps4-waker - Wake your PS4 (with help from the Playstation App)
+ps4-waker - Wake your PS4 (and more!) with help from the Playstation App
 
 Usage:
-  ps4-waker [options]
-  ps4-waker remote <key-name> (...<key-name>) Send remote key-press event(s)
-  ps4-waker search [-t]                       Search for devices
-  ps4-waker standby [-d <ip>]                 Request the device enter standby/rest mode
-  ps4-waker start [titleId]                   Start a specified title id
+  ps4-waker [options]                                   Wake PS4 device(s)
+  ps4-waker [options] remote <key-name> (...<key-name>) Send remote key-press event(s)
+  ps4-waker [options] search                            Search for devices
+  ps4-waker [options] standby                           Request the device enter standby/rest mode
+  ps4-waker [options] start <titleId>                   Start a specified title id
   ps4-waker --help | -h | -?                  Shows this help message.
   ps4-waker --version | -v                    Show package version.
 
 Options:
-  --bind | -b                  Bind to a specific network adapter IP, if you have multiple
-  --credentials | -c           Specify credentials file
-  --device | -d                Specify IP address of a specific PS4
+  --bind | -b <ip>             Bind to a specific network adapter IP, if you have multiple
+  --credentials | -c <file>    Specify credentials file
+  --device | -d <ip>           Specify IP address of a specific PS4
   --failfast                   Don't request credentials if none
-  --timeout | -t               Timeout in milliseconds
+  --timeout | -t <time>        Stop searching after <time> milliseconds; the default timeout 
+                                unspecified is 10 seconds
   --pin <pin-code>             Manual pin-code registration
 
-Searching:
-  If no timeout is provided to search, it will stop on the first result
+Device selection:
+  For any command, there are four possible conditions based on the flags you've specified:
+    1. Neither -t nor -d: Will act on the first device found; this is for households
+        with a single device on the network
+    2. Just -t: Will act on every device found within <time> millseconds
+    3. Just -d: Will search for at most 10 seconds (the default timeout) for and only act on 
+        the provided device, quitting if found
+    4. Both -t and -d: Will search for at most <time> seconds for and only act on the
+        provided device, qutting early if found.
 
 Key names:
   Button names are case insensitive, and can be one of:

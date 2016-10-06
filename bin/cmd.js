@@ -5,7 +5,7 @@ var async = require('async')
   , Detector = Waker.Detector
   , Socket = Waker.Socket
 
-  , DEFAULT_TIMEOUT = 5000
+  , DEFAULT_TIMEOUT = 10000
   , HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE || ''
   , CREDS_DEFAULT = require('path').join(HOME, '.ps4-wake.credentials.json');
 
@@ -28,27 +28,35 @@ if (argv.v || argv.version) {
 }
 
 if (argv.h || argv.help || argv['?']) {
-    console.log('ps4-waker - Wake your PS4 (with help from the Playstation App)');
+    console.log('ps4-waker - Wake your PS4 (and more!) with help from the Playstation App');
     console.log('');
     console.log('Usage:');
-    console.log('  ps4-waker [options]');
-    console.log('  ps4-waker remote <key-name> (...<key-name>) Send remote key-press event(s)');
-    console.log('  ps4-waker search [-t]                       Search for devices');
-    console.log('  ps4-waker standby [-d <ip>]                 Request the device enter standby/rest mode');
-    console.log('  ps4-waker start [titleId]                   Start a specified title id');
+    console.log('  ps4-waker [options]                                   Wake PS4 device(s)');
+    console.log('  ps4-waker [options] remote <key-name> (...<key-name>) Send remote key-press event(s)');
+    console.log('  ps4-waker [options] search                            Search for devices');
+    console.log('  ps4-waker [options] standby                           Request the device enter standby/rest mode');
+    console.log('  ps4-waker [options] start <titleId>                   Start a specified title id');
     console.log('  ps4-waker --help | -h | -?                  Shows this help message.');
     console.log('  ps4-waker --version | -v                    Show package version.');
     console.log('');
     console.log('Options:');
-    console.log('  --bind | -b                  Bind to a specific network adapter IP, if you have multiple');
-    console.log('  --credentials | -c           Specify credentials file');
-    console.log('  --device | -d                Specify IP address of a specific PS4');
+    console.log('  --bind | -b <ip>             Bind to a specific network adapter IP, if you have multiple');
+    console.log('  --credentials | -c <file>    Specify credentials file');
+    console.log('  --device | -d <ip>           Specify IP address of a specific PS4');
     console.log('  --failfast                   Don\'t request credentials if none');
-    console.log('  --timeout | -t               Timeout in milliseconds');
+    console.log('  --timeout | -t <time>        Stop searching after <time> milliseconds; the default timeout') ;
+    console.log('                                unspecified is 10 seconds');
     console.log('  --pin <pin-code>             Manual pin-code registration');
     console.log('');
-    console.log('Searching:');
-    console.log('  If no timeout is provided to search, it will stop on the first result');
+    console.log('Device selection:');
+    console.log('  For any command, there are four possible conditions based on the flags you\'ve specified:');
+    console.log('    1. Neither -t nor -d: Will act on the first device found; this is for households');
+    console.log('        with a single device on the network');
+    console.log('    2. Just -t: Will act on every device found within <time> millseconds');
+    console.log('    3. Just -d: Will search for at most 10 seconds (the default timeout) for and only act on') ;
+    console.log('        the provided device, quitting if found');
+    console.log('    4. Both -t and -d: Will search for at most <time> seconds for and only act on the');
+    console.log('        provided device, qutting early if found.');
     console.log('');
     console.log('Key names:');
     console.log('  Button names are case insensitive, and can be one of:');
@@ -56,12 +64,11 @@ if (argv.h || argv.help || argv['?']) {
     console.log('  You cannot send the actual x, square, etc. buttons');
     console.log('  A string of key presses may be provided, separated by spaces,');
     console.log('   and they will be sent sequentially.');
-    console.log('');
     return;
 }
 
 var detectOpts = {
-    timeout: argv.timeout,
+    timeout: argv.timeout || DEFAULT_TIMEOUT,
     bindAddress: argv.bind
 };
 
@@ -127,39 +134,33 @@ if (~argv._.indexOf('search')) {
                 }
             }, (err) => {
                 console.log("Remote key events sent");
-                process.exit(0);
+                // process.exit(0);
+                sock.close();
             });
         }, 1500);
     });
 }
 
 if (action) {
-    if (argv.timeout) {
-        var detected = {};
-        new Detector()
-        .on('device', function(device, rinfo) {
-            if (detected[device['host-id']]) return;
+    // accept the device either if we don't care, or if it's
+    //  the device we're looking for
+    var condition = (device, rinfo) => !argv.device || rinfo.address == argv.device;
 
-            detected[device['host-id']] = true;
+    // if either a device is provided OR there's no timeout,
+    //  we just quickly stop on the first found; otherwise,
+    //  just keep going
+    var detectorFunction = argv.device || argv.timeout === undefined
+        ? Detector.findFirst
+        : Detector.findWhen;
+    
+    detectorFunction(condition, detectOpts, function(err, device, rinfo) {
+        if (err) {
+            console.error(err.message);
+            return;
+        }
 
-            var deviceFound = rinfo.address == argv.device;
-            if (!argv.device || deviceFound) {
-                this.removeAllListeners('close');
-                action(null, device, rinfo);
-
-                if (deviceFound) {
-                    this.close();
-                }
-            }
-        })
-        .on('close', function() {
-            console.error("Could not detect any PS4 device");
-        })
-        .detect(detectOpts);
-    } else {
-        detectOpts.timeout = DEFAULT_TIMEOUT;
-        Detector.findAny(detectOpts, action);
-    }
+        action(null, device, rinfo);
+    });
     return;
 }
 
