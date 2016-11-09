@@ -31,6 +31,7 @@ Usage:
 
 Options:
   --bind | -b <ip>             Bind to a specific network adapter IP, if you have multiple
+  --bind-port | -p <port>      Bind on a specific port, if you need to route specifically
   --credentials | -c <file>    Specify credentials file
   --device | -d <ip>           Specify IP address of a specific PS4
   --failfast                   Don't request credentials if none

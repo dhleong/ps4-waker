@@ -19,6 +19,7 @@ var argv = require('minimist')(process.argv.slice(2), {
       , device: 'd'
       , timeout: 't'
       , bind: 'b'
+      , 'bind-port': 'p'
     }
 });
 
@@ -41,6 +42,7 @@ if (argv.h || argv.help || argv['?']) {
     console.log('');
     console.log('Options:');
     console.log('  --bind | -b <ip>             Bind to a specific network adapter IP, if you have multiple');
+    console.log('  --bind-port | -p <port>      Bind on a specific port, if you need to route specifically');
     console.log('  --credentials | -c <file>    Specify credentials file');
     console.log('  --device | -d <ip>           Specify IP address of a specific PS4');
     console.log('  --failfast                   Don\'t request credentials if none');
@@ -69,7 +71,8 @@ if (argv.h || argv.help || argv['?']) {
 
 var detectOpts = {
     timeout: argv.timeout || DEFAULT_TIMEOUT,
-    bindAddress: argv.bind
+    bindAddress: argv.bind,
+    bindPort: argv['bind-port']
 };
 
 var action = null;
