@@ -120,7 +120,7 @@ Waker.prototype.wake = function(detectOpts, device, callback) {
         if (err) return callback(err);
 
         device.address = rinfo.address;
-        device.port = device['host-request-port']
+        device.port = device['host-request-port'];
         self._doWake(device, detectOpts, callback);
     });
 };
@@ -139,7 +139,7 @@ Waker.prototype._doWake = function(device, detectOpts, callback) {
         }
 
         // we have credentials!
-        if (device.status && device.status != 'Standby' && self.config.errorIfAwake) {
+        if (device.status && device.status !== 'Standby' && self.config.errorIfAwake) {
             return callback(new Error(device['host-name'] 
                     + ' is already awake! ('
                     + device.status
@@ -212,7 +212,7 @@ Waker.prototype.requestCredentials = function(callback) {
             return data;
         }, {});
 
-        if (typeof(self.credentials) == 'object') {
+        if (typeof(self.credentials) === 'object') {
             callback(null, creds);
         } else {
             fs.writeFile(self.credentials, JSON.stringify(creds), function(err) {
@@ -228,7 +228,7 @@ Waker.prototype.requestCredentials = function(callback) {
         callback(err);
     });
     dummy.listen();
-}
+};
 
 /**
  * Send a WAKEUP request directly to the given device,
@@ -271,7 +271,7 @@ Waker.prototype.sendWake = function(device, detectOpts, creds, callback) {
         self._whenAwake(device, detectOpts,
             self._login.bind(self, device, creds, callback));
     });
-}
+};
 
 Waker.prototype._whenAwake = function(device, detectOpts, callback) {
     this.emit('device-notified', device);
@@ -299,11 +299,11 @@ Waker.prototype._whenAwake = function(device, detectOpts, callback) {
 
         self.udp.close();
         callback(null);
-    }
+    };
 
     // begin the loop
     loop(null);
-}
+};
 
 // NB: weird arg order due to binding
 Waker.prototype._login = function(device, creds, callback, err) {
@@ -334,7 +334,7 @@ Waker.prototype._login = function(device, creds, callback, err) {
             callback(null);
         }
     }).on('error', function(err) {
-        if (socket.retries++ < MAX_RETRIES && err.code == 'ECONNREFUSED') {
+        if (socket.retries++ < MAX_RETRIES && err.code === 'ECONNREFUSED') {
             console.warn("Login connect refused; retrying soon");
             setTimeout(function() {
                 // try again; system may just not be up yet
@@ -346,7 +346,7 @@ Waker.prototype._login = function(device, creds, callback, err) {
         console.error("Error logging in:", err);
         callback(null); // technically, wake was successful
     });
-}
+};
 
 module.exports = Waker;
 module.exports.Detector = Detector;

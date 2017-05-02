@@ -80,7 +80,7 @@ if (~argv._.indexOf('search')) {
     action = function(err, device, rinfo) {
         if (err) return console.error(err);
         device.address = rinfo.address;
-        console.log(device);
+        console.log(JSON.stringify(device, null, 2));
     };
 } else if (~argv._.indexOf('start')) {
     var start = argv._.indexOf('start') + 1;
@@ -190,13 +190,13 @@ function doRegister(address, creds) {
         accountId: creds['user-credential']
       , host: address
       , pinCode: argv.pin // if we're already registered, default "" is okay
-    })
+    });
     sock.on('login_result', function(packet) {
         if (packet.result === 0) {
             console.log("Logged into device! Future uses should succeed");
             process.exit(0);
-        } else if (packet.error == "PIN_IS_NEEDED"
-                || packet.error == "PASSCODE_IS_NEEDED") {
+        } else if (packet.error === "PIN_IS_NEEDED"
+                || packet.error === "PASSCODE_IS_NEEDED") {
             // NB: pincode auth seems to work just fine
             //  even if passcode was requested. Shrug.
 
@@ -237,7 +237,7 @@ waker.on('need-credentials', function(targetDevice) {
     // just assume we need to register as well
     var address = targetDevice.address;
     Detector.find(address, detectOpts, function(err, device) {
-        if (err || device.status.toUpperCase() != 'OK') {
+        if (err || device.status.toUpperCase() !== 'OK') {
             console.error("Device must be awake for initial registration");
             process.exit(2);
         }
@@ -271,7 +271,7 @@ if (argv.pin) {
 
             doRegister(address, creds);
         });
-    }
+    };
 
     if (argv.device) {
         getCredsAndRegister(argv.device);
