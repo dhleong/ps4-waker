@@ -1,25 +1,25 @@
 #!/usr/bin/env node
 
 var async = require('async')
-    , Waker = require('../')
-    , Detector = Waker.Detector
-    , Socket = Waker.Socket
+  , Waker = require('../')
+  , Detector = Waker.Detector
+  , Socket = Waker.Socket
 
-    , DEFAULT_TIMEOUT = 10000
-    , HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE || ''
-    , CREDS_DEFAULT = require('path').join(HOME, '.ps4-wake.credentials.json');
+  , DEFAULT_TIMEOUT = 10000
+  , HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE || ''
+  , CREDS_DEFAULT = require('path').join(HOME, '.ps4-wake.credentials.json');
 
 var argv = require('minimist')(process.argv.slice(2), {
     default: {
         credentials: CREDS_DEFAULT
-        , pin: ''
+      , pin: ''
     }
-    , alias: {
+  , alias: {
         credentials: 'c'
-        , device: 'd'
-        , timeout: 't'
-        , bind: 'b'
-        , 'bind-port': 'p'
+      , device: 'd'
+      , timeout: 't'
+      , bind: 'b'
+      , 'bind-port': 'p'
     }
 });
 
@@ -80,7 +80,7 @@ if (~argv._.indexOf('search')) {
     action = function(err, device, rinfo) {
         if (err) return console.error(err);
         device.address = rinfo.address;
-        console.log(JSON.stringify(device, null, 2));
+        console.log(device);
     };
 } else if (~argv._.indexOf('start')) {
     var start = argv._.indexOf('start') + 1;
@@ -91,7 +91,7 @@ if (~argv._.indexOf('search')) {
                 if (err) console.error(err);
                 else console.log("Started!");
                 process.exit(0);
-            });
+            });   
         });
     } else {
         console.error("A title id must be started");
@@ -127,15 +127,15 @@ if (~argv._.indexOf('search')) {
             // send each key in series, with a delay in between
             async.forEachSeries(queue, (key, cb) => {
                 var val = Socket.RCKeys[key];
-            sock.remoteControl(val);
-            setTimeout(cb, val == Socket.RCKeys.PS
-                ? 1000 // higher delay after PS button press
-                : 200); // too much lower and it becomes unreliable
+                sock.remoteControl(val);
+                setTimeout(cb, val == Socket.RCKeys.PS
+                    ? 1000 // higher delay after PS button press
+                    : 200); // too much lower and it becomes unreliable
 
-            if (!key.endsWith("_RC")) {
-                console.log("Sent", key);
-            }
-        }, (err) => {
+                if (!key.endsWith("_RC")) {
+                    console.log("Sent", key);
+                }
+            }, (err) => {
                 console.log("Remote key events sent");
                 // process.exit(0);
                 sock.close();
@@ -155,7 +155,7 @@ if (action) {
     var detectorFunction = argv.device || argv.timeout === undefined
         ? Detector.findFirst
         : Detector.findWhen;
-
+    
     detectorFunction(condition, detectOpts, function(err, device, rinfo) {
         if (err) {
             console.error(err.message);
@@ -188,15 +188,15 @@ function doRegister(address, creds) {
 
     var sock = Socket({
         accountId: creds['user-credential']
-        , host: address
-        , pinCode: argv.pin // if we're already registered, default "" is okay
-    });
+      , host: address
+      , pinCode: argv.pin // if we're already registered, default "" is okay
+    })
     sock.on('login_result', function(packet) {
         if (packet.result === 0) {
             console.log("Logged into device! Future uses should succeed");
             process.exit(0);
-        } else if (packet.error === "PIN_IS_NEEDED"
-            || packet.error === "PASSCODE_IS_NEEDED") {
+        } else if (packet.error == "PIN_IS_NEEDED"
+                || packet.error == "PASSCODE_IS_NEEDED") {
             // NB: pincode auth seems to work just fine
             //  even if passcode was requested. Shrug.
 
@@ -206,7 +206,7 @@ function doRegister(address, creds) {
             // prompt the user
             require('readline').createInterface({
                 input: process.stdin
-                , output: process.stdout
+              , output: process.stdout
             }).question("Pin code> ", function(pin) {
                 if (!pin) {
                     console.error("Pin is required");
@@ -221,10 +221,10 @@ function doRegister(address, creds) {
             process.exit(3);
         }
     })
-        .on('error', function(err) {
-            console.error('Unable to connect to PS4 at', address, err);
-            process.exit(1);
-        });
+    .on('error', function(err) {
+        console.error('Unable to connect to PS4 at', address, err);
+        process.exit(1);
+    });
 }
 
 waker.on('need-credentials', function(targetDevice) {
@@ -237,15 +237,15 @@ waker.on('need-credentials', function(targetDevice) {
     // just assume we need to register as well
     var address = targetDevice.address;
     Detector.find(address, detectOpts, function(err, device) {
-        if (err || device.status.toUpperCase() !== 'OK') {
+        if (err || device.status.toUpperCase() != 'OK') {
             console.error("Device must be awake for initial registration");
             process.exit(2);
         }
-
+    
         console.log("No credentials; Use Playstation App and try to connect to PS4-Waker");
         waker.requestCredentials(function(err, creds) {
             if (err) return console.error(err);
-
+            
             console.log("Got credentials!", creds);
 
             // okay, now register
@@ -271,7 +271,7 @@ if (argv.pin) {
 
             doRegister(address, creds);
         });
-    };
+    }
 
     if (argv.device) {
         getCredsAndRegister(argv.device);
@@ -291,7 +291,7 @@ if (argv.pin) {
     doWake();
 }
 
-/**
+/** 
  * Returns an action that will prepare
  *  a Socket connection and hand it to your
  *  callback. If we're unable to connect,
@@ -311,12 +311,12 @@ function newSocketAction(callback) {
 
             Socket({
                 accountId: creds['user-credential']
-                , host: rinfo.address
-                , pinCode: argv.pin
+              , host: rinfo.address
+              , pinCode: argv.pin
             }).on('ready', function() {
                 callback(this);
             }).on('error', function(err) {
-                console.error('Unable to connect to PS4 at',
+                console.error('Unable to connect to PS4 at', 
                     rinfo.address, err);
                 process.exit(1);
             });

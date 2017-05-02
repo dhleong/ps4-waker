@@ -1,25 +1,25 @@
 
 var util = require('util')
-    , events = require('events')
-    , fs = require('fs')
-
-    , _ = require('underscore')
-    , Detector = require('./lib/detector')
-    , Dummy = require('./lib/dummy')
-    , ps4lib = require('./lib/ps4lib')
-    , newSocket = require('./lib/ps4socket')
-
-    , DEFAULT_TIMEOUT = 5000
-    , WAIT_FOR_WAKE = 30000
-    , MAX_RETRIES = 5
-    , CRED_KEYS = ['client-type', 'auth-type', 'user-credential'];
+  , events = require('events')
+  , fs = require('fs')
+  
+  , _ = require('underscore')
+  , Detector = require('./lib/detector')
+  , Dummy = require('./lib/dummy')
+  , ps4lib = require('./lib/ps4lib')
+  , newSocket = require('./lib/ps4socket')
+  
+  , DEFAULT_TIMEOUT = 5000
+  , WAIT_FOR_WAKE = 30000
+  , MAX_RETRIES = 5
+  , CRED_KEYS = ['client-type', 'auth-type', 'user-credential'];
 
 /**
- * Construct a new Waker instance, which may be
+ * Construct a new Waker instance, which may be 
  *  used to wake a PS4 and login to it. If desired,
  *  you may also retain the ps4socket connection
  *  used to login for other purposes (such as
- *  launching apps, or putting the system in standby).
+ *  launching apps, or putting the system in standby). 
  *
  * @param credentials Either a string path to a credentials
  *                    file, or an object containing the
@@ -30,9 +30,9 @@ var util = require('util')
  *               connection and cause the PS4 to login with
  *               the credentials provided for waking
  *  - errorIfAwake: (default: true) If true, returns an Error
- *                  to the callback from wake() if the PS4 was
+ *                  to the callback from wake() if the PS4 was 
  *                  not in standby mode. If you're using Waker
- *                  to get a ps4socket, you may want to
+ *                  to get a ps4socket, you may want to 
  *                  specify `false` here so you can get a socket
  *                  regardless of whether the PS4 is in standby
  *  - keepSocket: (default: false) If true, the callback from
@@ -52,16 +52,16 @@ function Waker(credentials, config) {
 
     this.config = _.extend({
         autoLogin: true
-        , errorIfAwake: true
-        , keepSocket: false
-        , debug: false
+      , errorIfAwake: true
+      , keepSocket: false
+      , debug: false
     }, config);
 }
 util.inherits(Waker, events.EventEmitter);
 
 /**
  * Attempt to wake a specific PS4, or any PS4.
- * @param detectOpts @see Detector#detect(); If you provide a
+ * @param detectOpts @see Detector#detect(); If you provide a 
  *                   device, any `timeout` set in this is ignored
  * @param device (optional) A device object. If not provided,
  *               we will attempt to locate *any* PS4 and wake
@@ -86,8 +86,8 @@ Waker.prototype.wake = function(detectOpts, device, callback) {
     if (!(typeof(detectOpts) === 'number'
         || typeof(callback) === 'function'
         || (typeof(detectOpts) === 'object'
-        && device
-        && (device['host-name'] || typeof(device) === 'function')))) {
+            && device
+            && (device['host-name'] || typeof(device) === 'function')))) {
         // thanks to backwards compat, this is a bit gross. In other words,
         // detectOpts was definitely provided IFF it's a number OR it's
         // an object and: callback is a function OR 
@@ -120,7 +120,7 @@ Waker.prototype.wake = function(detectOpts, device, callback) {
         if (err) return callback(err);
 
         device.address = rinfo.address;
-        device.port = device['host-request-port'];
+        device.port = device['host-request-port']
         self._doWake(device, detectOpts, callback);
     });
 };
@@ -139,11 +139,11 @@ Waker.prototype._doWake = function(device, detectOpts, callback) {
         }
 
         // we have credentials!
-        if (device.status && device.status !== 'Standby' && self.config.errorIfAwake) {
-            return callback(new Error(device['host-name']
-                + ' is already awake! ('
-                + device.status
-                + ')'
+        if (device.status && device.status != 'Standby' && self.config.errorIfAwake) {
+            return callback(new Error(device['host-name'] 
+                    + ' is already awake! ('
+                    + device.status
+                    + ')'
             ));
         }
 
@@ -153,7 +153,7 @@ Waker.prototype._doWake = function(device, detectOpts, callback) {
 
 /**
  * Read credentials from the provided constructor
- *  argument. Transparently handles the case that a
+ *  argument. Transparently handles the case that a 
  *  credentials object was passed instead of a path
  *  to a file, so you can use this regardless of
  *  how the Waker was constructed. Most users will
@@ -168,13 +168,13 @@ Waker.prototype._doWake = function(device, detectOpts, callback) {
  *                 on success.
  */
 Waker.prototype.readCredentials = function(callback) {
-
+    
     if (this.credentials !== null && typeof(this.credentials) === 'object') {
         callback(null, this.credentials);
     } else {
         fs.readFile(this.credentials, function(err, buf) {
             if (err) return callback(err);
-
+            
             callback(null, JSON.parse(buf.toString()));
         });
     }
@@ -191,7 +191,7 @@ Waker.prototype.readCredentials = function(callback) {
  *  to the callback always, if a file path was provided
  *  for the `credentials` param in the Waker constructor,
  *  they will also be written to that file. If an object
- *  was provided, however the credentials will ONLY be
+ *  was provided, however the credentials will ONLY be 
  *  passed to the callback.
  *
  * @param callback Standard node.js callback function,
@@ -212,7 +212,7 @@ Waker.prototype.requestCredentials = function(callback) {
             return data;
         }, {});
 
-        if (typeof(self.credentials) === 'object') {
+        if (typeof(self.credentials) == 'object') {
             callback(null, creds);
         } else {
             fs.writeFile(self.credentials, JSON.stringify(creds), function(err) {
@@ -228,7 +228,7 @@ Waker.prototype.requestCredentials = function(callback) {
         callback(err);
     });
     dummy.listen();
-};
+}
 
 /**
  * Send a WAKEUP request directly to the given device,
@@ -271,7 +271,7 @@ Waker.prototype.sendWake = function(device, detectOpts, creds, callback) {
         self._whenAwake(device, detectOpts,
             self._login.bind(self, device, creds, callback));
     });
-};
+}
 
 Waker.prototype._whenAwake = function(device, detectOpts, callback) {
     this.emit('device-notified', device);
@@ -299,11 +299,11 @@ Waker.prototype._whenAwake = function(device, detectOpts, callback) {
 
         self.udp.close();
         callback(null);
-    };
+    }
 
     // begin the loop
     loop(null);
-};
+}
 
 // NB: weird arg order due to binding
 Waker.prototype._login = function(device, creds, callback, err) {
@@ -317,9 +317,9 @@ Waker.prototype._login = function(device, creds, callback, err) {
     this.emit('logging-in', device);
     var socket = newSocket({
         accountId: creds['user-credential']
-        , host: device.address
-        , pinCode: '' // assume we're registered...?
-        , debug: self.config.debug
+      , host: device.address
+      , pinCode: '' // assume we're registered...?
+      , debug: self.config.debug
     });
     socket.retries = 0;
     socket.on('login_result', function(packet) {
@@ -334,7 +334,7 @@ Waker.prototype._login = function(device, creds, callback, err) {
             callback(null);
         }
     }).on('error', function(err) {
-        if (socket.retries++ < MAX_RETRIES && err.code === 'ECONNREFUSED') {
+        if (socket.retries++ < MAX_RETRIES && err.code == 'ECONNREFUSED') {
             console.warn("Login connect refused; retrying soon");
             setTimeout(function() {
                 // try again; system may just not be up yet
@@ -346,7 +346,7 @@ Waker.prototype._login = function(device, creds, callback, err) {
         console.error("Error logging in:", err);
         callback(null); // technically, wake was successful
     });
-};
+}
 
 module.exports = Waker;
 module.exports.Detector = Detector;
