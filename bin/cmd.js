@@ -2,14 +2,12 @@
 
 var Detector = require('../lib/detector')
   , Device = require('../lib/device')
+  , Socket = require('../lib/ps4socket')
 
-  , DEFAULT_TIMEOUT = 10000
-  , HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE || ''
-  , CREDS_DEFAULT = require('path').join(HOME, '.ps4-wake.credentials.json');
+  , DEFAULT_TIMEOUT = 10000;
 
 const argv = require('minimist')(process.argv.slice(2), {
     default: {
-        credentials: CREDS_DEFAULT,
         pin: ''
     },
     alias: {
@@ -80,8 +78,22 @@ var detectOpts = {
 
 var action;
 
-if (~argv._.indexOf('search')) {
-    // search is a special case.
+if (argv.pin) {
+    // manual pin-code entry is a special case
+    action = (d) => {
+        let waker = d._waker();
+        waker.readCredentials(function(err, creds) {
+            if (err) {
+                // just trigger the need-credentials flow
+                waker.emit('need-credentials', d._info);
+                return;
+            }
+
+            _registerDevice(d, creds);
+        });
+    };
+} else if (~argv._.indexOf('search')) {
+    // search is also a bit of a special case
     action = function(device) {
         logResult(device._info);
     };
@@ -104,7 +116,9 @@ if (~argv._.indexOf('search')) {
     var keyNames = argv._.slice(remote).map((key) => key.toUpperCase());
 
     action = doAndClose(device => device.sendKeys(keyNames));
+
 } else {
+    // default is simple "wake"
     action = doAndClose(device => device.turnOn());
 }
 
@@ -136,14 +150,23 @@ if (action) {
 // Util methods
 //
 
-function logError(err) {
+function logError(err, ...args) {
     // TODO --json flag?
-    console.error(err);
+    console.error(err, ...args);
+}
+
+function logEvent(msg, ...args) {
+    // TODO --json flag?
+    console.log(msg, ...args);
 }
 
 function logResult(result) {
     // TODO --json flag?
-    console.log(JSON.stringify(result, null, 2));
+    if (typeof(result) === 'string') {
+        console.log(result);
+    } else {
+        console.log(JSON.stringify(result, null, 2));
+    }
 }
 
 /**
@@ -173,7 +196,7 @@ function doAndClose(cb) {
 function _createDevice(deviceInfo, rinfo) {
     let d = new Device(Object.assign({
         address: rinfo.address,
-        credentials: rinfo.credentials,
+        credentials: argv.credentials,
     }, detectOpts));
 
     // store this so we don't have to re-fetch for search
@@ -196,7 +219,21 @@ function _setupCredentialHandling(d) {
             return;
         }
 
-        console.warn("TODO credential handling");
+        // just assume we need to register as well
+        if (d._info.status.toUpperCase() !== 'OK') {
+            logError("Device must be awake for initial registration. Please turn it on manually and try again.");
+            process.exit(2);
+        }
+
+        logEvent("No credentials; Use Playstation App and try to connect to PS4-Waker");
+        d._waker().requestCredentials(function(err, creds) {
+            if (err) return logError(err);
+
+            logEvent("Got credentials! ", creds);
+
+            // okay, now register
+            _registerDevice(d, creds);
+        });
     });
 }
 
@@ -214,5 +251,54 @@ function _setupLogging(d) {
     d.on('error', function(err) {
         logError('Unable to connect to PS4 at',
             d._info.address, err);
+    });
+}
+
+function _registerDevice(d, creds) {
+    // I believe we (sadly) need to bypass the Device here,
+    //  since its openSocket() expects to login.
+    let address = d._info.address;
+    let sock = Socket({
+        accountId: creds['user-credential']
+      , host: address
+
+        // if we're already registered, default "" is okay:
+        // also, it MUST be a string
+      , pinCode: '' + (argv.pin || "")
+    });
+    sock.on('login_result', function(packet) {
+        if (packet.result === 0) {
+            logResult("Logged into device! Future uses should succeed");
+            process.exit(0);
+        } else if (packet.error === "PIN_IS_NEEDED"
+                || packet.error === "PASSCODE_IS_NEEDED") {
+            // NB: pincode auth seems to work just fine
+            //  even if passcode was requested. Shrug.
+
+            logEvent("Go to 'Settings -> PlayStation(R) App Connection Settings -> Add Device'" +
+                " on your PS4 to obtain the PIN code.");
+
+            // prompt the user
+            require('readline').createInterface({
+                input: process.stdin
+              , output: process.stdout
+            }).question("Pin code> ", function(pin) {
+                if (!pin) {
+                    logError("Pin is required");
+                    process.exit(4);
+                }
+
+                sock.login(pin);
+            });
+
+        } else {
+            logError("Unexpected error:" +
+                packet.result + " / " + packet.error);
+            process.exit(3);
+        }
+    })
+    .on('error', function(err) {
+        logError('Unable to connect to PS4 at ' + address, err);
+        process.exit(1);
     });
 }
