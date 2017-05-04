@@ -1,7 +1,7 @@
-ps4-waker
+ps4-waker [![Build Status](http://img.shields.io/travis/dhleong/ps4-waker.svg?style=flat)](https://travis-ci.org/dhleong/ps4-waker)
 =========
 
-Wake your PS4 over LAN (and a few other tricks) with help from 
+Wake your PS4 over LAN (and a few other tricks) with help from
 the Playstation App.
 
 ### Requirements
@@ -115,7 +115,7 @@ for smooth operation on Windows or Linux.
 The TCP connection API is exposed via `require('ps4-waker').Socket`, and the
 PS4 detection as `require('ps4-waker').Detector`. In the future, these may
 be broken out into a separate library, perhaps with more features from the app,
-such as "on screen keyboard" simulation. 
+such as "on screen keyboard" simulation.
 See the sources in the lib directory for more information on these modules.
 
 ### Acknowledgements
