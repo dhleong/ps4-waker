@@ -13,10 +13,14 @@ chai.should();
 class FakeSocket extends EventEmitter {
     constructor(device) {
         super();
+
         this.isOpen = true;
         this._device = device;
 
         this.pendingStandbyResults = [];
+        this.pendingStartResults = [];
+
+        this.startedTitles = [];
     }
 
     close() {
@@ -38,6 +42,18 @@ class FakeSocket extends EventEmitter {
         }
 
         var result = this.pendingStandbyResults.shift();
+        cb(result);
+    }
+
+    startTitle(titleId, cb) {
+        if (!this.pendingStartResults.length) {
+            cb(new Error('No pending startRequest results'));
+            return;
+        }
+
+        this.startedTitles.push(titleId);
+
+        var result = this.pendingStartResults.shift();
         cb(result);
     }
 }
@@ -353,6 +369,29 @@ describe("Device", function() {
                     ['*setTimeout', 200],
                 ]);
             });
+        });
+    });
+
+    describe("startTitle", function() {
+        beforeEach(function() {
+            pendingDetectPromise = Promise.resolve({
+                address: '123.456.789.0',
+                status: 'OK'
+            });
+
+            waker.pendingResults.push([null, socket]);
+        });
+
+        it("works", function() {
+            socket.pendingStartResults.push(null);
+
+            return device.startTitle("CUSA00123").then(res => {
+                res.should.deep.equal(device);
+                socket.startedTitles.should.deep.equal([
+                    'CUSA00123'
+                ]);
+            })
+            .catch(assertUnexpectedError);
         });
     });
 });
