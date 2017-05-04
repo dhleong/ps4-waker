@@ -55,6 +55,8 @@ Key names:
   You cannot send the actual x, square, etc. buttons
   A string of key presses may be provided, separated by spaces,
    and they will be sent sequentially.
+  In addition, a key name may be followed by a colon and a duration in
+   milliseconds to hold that key, eg: ps4-waker remote ps:1000
 ```
 
 For most cases, simply run the executable with no arguments. On first run,

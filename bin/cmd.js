@@ -62,6 +62,8 @@ if (argv.h || argv.help || argv['?']) {
     console.log('  You cannot send the actual x, square, etc. buttons');
     console.log('  A string of key presses may be provided, separated by spaces,');
     console.log('   and they will be sent sequentially.');
+    console.log('  In addition, a key name may be followed by a colon and a duration in ');
+    console.log('   milliseconds to hold that key, eg: ps4-waker remote ps:1000');
     return;
 }
 
@@ -112,9 +114,17 @@ if (argv.pin) {
     action = doAndClose(device => device.turnOff());
 } else if (~argv._.indexOf('remote')) {
 
-    // TODO: holdTime
     var remote = argv._.indexOf('remote') + 1;
-    var keyNames = argv._.slice(remote).map((key) => key.toUpperCase());
+    var keyNames = argv._.slice(remote).map(rawKey => {
+        let parts = rawKey.split(":");
+        if (parts.length === 1) {
+            // simple key
+            return rawKey;
+        } else {
+            // held key
+            return [parts[0], parseInt(parts[1])];
+        }
+    });
 
     action = doAndClose(device => device.sendKeys(keyNames));
 
@@ -245,6 +255,10 @@ function _setupLogging(d) {
 
     d.on('logging-in', function() {
         console.log("Logging in...");
+    });
+
+    d.on('sent-key', k => {
+        console.log("Sent key", k);
     });
 
     d.on('error', function(err) {

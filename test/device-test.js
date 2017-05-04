@@ -299,7 +299,7 @@ describe("Device", function() {
 
                     ['send_rc_key', Socket.RCKeys.RIGHT],
                     ['send_rc_key', Socket.RCKeys.KEY_OFF],
-                    ['sent_key', 'RIGHT'],
+                    ['sent-key', 'RIGHT'],
                     ['*setTimeout', 200],
 
                     ['send_rc_key', Socket.RCKeys.CLOSE_RC],
@@ -321,7 +321,7 @@ describe("Device", function() {
                     ['send_rc_key', Socket.RCKeys.LEFT, 1000],
                     ['send_rc_key', Socket.RCKeys.KEY_OFF],
 
-                    ['sent_key', 'LEFT'],
+                    ['sent-key', 'LEFT'],
                     ['*setTimeout', 200],
 
                     ['send_rc_key', Socket.RCKeys.CLOSE_RC],
@@ -340,7 +340,7 @@ describe("Device", function() {
                     ['send_rc_key', Socket.RCKeys.PS],
                     ['send_rc_key', Socket.RCKeys.KEY_OFF],
 
-                    ['sent_key', 'PS'],
+                    ['sent-key', 'PS'],
                     ['*setTimeout', 1000],
 
                     ['send_rc_key', Socket.RCKeys.CLOSE_RC],
@@ -362,7 +362,7 @@ describe("Device", function() {
                     ['send_rc_key', Socket.RCKeys.PS, 1000],
                     // NOTE: we do NOT clear with KEY_OFF
 
-                    ['sent_key', 'PS'],
+                    ['sent-key', 'PS'],
                     ['*setTimeout', 1000],
 
                     ['send_rc_key', Socket.RCKeys.CLOSE_RC],
