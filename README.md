@@ -44,7 +44,7 @@ Device selection:
     1. Neither -t nor -d: Will act on the first device found; this is for households
         with a single device on the network
     2. Just -t: Will act on every device found within <time> millseconds
-    3. Just -d: Will search for at most 10 seconds (the default timeout) for and only act on 
+    3. Just -d: Will search for at most 10 seconds (the default timeout) for and only act on
         the provided device, quitting if found
     4. Both -t and -d: Will search for at most <time> seconds for and only act on the
         provided device, qutting early if found.
@@ -59,8 +59,36 @@ Key names:
 
 For most cases, simply run the executable with no arguments. On first run,
 you will be asked to connect to the "PS4-Waker" Playstation, and to turn on
-your PS4 and go to the "add devices" screen to get a pin code, and enter that. 
+your PS4 and go to the "add devices" screen to get a pin code, and enter that.
 After that, future executions should just work.
+
+### Scripting API
+
+For finer control, especially in a home-automation context, you may want to use
+the `Device` API. The `Device` API is a high-level abstraction on top of the old
+Waker and Detector APIs (which are still around, of course, if you need them).
+You use it like this:
+
+```javascript
+const {Device} = require('ps4-waker');
+
+var ps4 = new Device();
+ps4.turnOn().then(() => ps4.close());
+```
+
+Most methods on the `Device` object return a Promise and can be used with async/await.
+The `Device` will automatically attempt to maintain an active connection to your device
+until you explicitly `close()` it or call `turnOff()`. This will let you issue
+subsequent commands like `.startTitle()` or `.sendKeys()` without seeing the annoying
+"A companion app has connected/disconnected" messages all the time.
+
+The API alone cannot register with your device automatically, but it has the same
+defaults for credentials file location as the CLI, so you can do the initial
+registration on the CLI and expect the API to work (provided you pass the same
+configuration).
+
+For more information, including how to specify specific devices on multi-device
+networks, see the documentation comments in [device.js](lib/device.js).
 
 ### How it works
 

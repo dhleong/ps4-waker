@@ -112,6 +112,7 @@ if (argv.pin) {
     action = doAndClose(device => device.turnOff());
 } else if (~argv._.indexOf('remote')) {
 
+    // TODO: holdTime
     var remote = argv._.indexOf('remote') + 1;
     var keyNames = argv._.slice(remote).map((key) => key.toUpperCase());
 
