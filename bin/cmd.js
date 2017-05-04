@@ -211,8 +211,6 @@ function _createDevice(deviceInfo, rinfo) {
 }
 
 function _setupCredentialHandling(d) {
-    // TODO handle initial auth
-
     d.on('need-credentials', () => {
         if (argv.failfast) {
             logError("No credentials found.");
