@@ -1,25 +1,23 @@
 #!/usr/bin/env node
 
-var async = require('async')
-  , Waker = require('../')
-  , Detector = Waker.Detector
-  , Socket = Waker.Socket
+var Detector = require('../lib/detector')
+  , Device = require('../lib/device')
 
   , DEFAULT_TIMEOUT = 10000
   , HOME = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE || ''
   , CREDS_DEFAULT = require('path').join(HOME, '.ps4-wake.credentials.json');
 
-var argv = require('minimist')(process.argv.slice(2), {
+const argv = require('minimist')(process.argv.slice(2), {
     default: {
-        credentials: CREDS_DEFAULT
-      , pin: ''
-    }
-  , alias: {
-        credentials: 'c'
-      , device: 'd'
-      , timeout: 't'
-      , bind: 'b'
-      , 'bind-port': 'p'
+        credentials: CREDS_DEFAULT,
+        pin: ''
+    },
+    alias: {
+        credentials: 'c',
+        device: 'd',
+        timeout: 't',
+        bind: 'b',
+        'bind-port': 'p'
     }
 });
 
@@ -75,73 +73,39 @@ var detectOpts = {
     bindPort: argv['bind-port']
 };
 
-var action = null;
+
+//
+// Main
+//
+
+var action;
+
 if (~argv._.indexOf('search')) {
-    action = function(err, device, rinfo) {
-        if (err) return console.error(err);
-        device.address = rinfo.address;
-        console.log(JSON.stringify(device, null, 2));
+    // search is a special case.
+    action = function(device) {
+        logResult(device._info);
     };
 } else if (~argv._.indexOf('start')) {
     var start = argv._.indexOf('start') + 1;
     var title = argv._[start];
+
     if (title) {
-        action = newSocketAction(function(sock) {
-            sock.startTitle(title, function(err) {
-                if (err) console.error(err);
-                else console.log("Started!");
-                process.exit(0);
-            });   
-        });
+        action = doAndClose(device => device.startTitle(title));
     } else {
-        console.error("A title id must be started");
+        logError("A title id must be provided to start");
         process.exit(1);
     }
+
 } else if (~argv._.indexOf('standby')) {
-    action = newSocketAction(function(sock) {
-        sock.requestStandby(function(err) {
-            if (err) console.error(err);
-            else console.log("Standby requested");
-            process.exit(0);
-        });
-    });
+    action = doAndClose(device => device.turnOff());
 } else if (~argv._.indexOf('remote')) {
+
     var remote = argv._.indexOf('remote') + 1;
     var keyNames = argv._.slice(remote).map((key) => key.toUpperCase());
 
-    var invalid = keyNames.filter((key) => !(key in Socket.RCKeys));
-    if (invalid.length) {
-        console.error("Unknown key names: ", invalid);
-        process.exit(1);
-        return;
-    }
-
-    var queue = ["OPEN_RC"]
-        .concat(keyNames)
-        .concat(["CLOSE_RC"]);
-
-    action = newSocketAction(function(sock) {
-        // give it some time to think---if we try to OPEN_RC
-        //  too soon after connecting, the ps4 seems to disregard
-        setTimeout(function() {
-            // send each key in series, with a delay in between
-            async.forEachSeries(queue, (key, cb) => {
-                var val = Socket.RCKeys[key];
-                sock.remoteControl(val);
-                setTimeout(cb, val == Socket.RCKeys.PS
-                    ? 1000 // higher delay after PS button press
-                    : 200); // too much lower and it becomes unreliable
-
-                if (!key.endsWith("_RC")) {
-                    console.log("Sent", key);
-                }
-            }, (err) => {
-                console.log("Remote key events sent");
-                // process.exit(0);
-                sock.close();
-            });
-        }, 1500);
-    });
+    action = doAndClose(device => device.sendKeys(keyNames));
+} else {
+    action = doAndClose(device => device.turnOn());
 }
 
 if (action) {
@@ -155,172 +119,100 @@ if (action) {
     var detectorFunction = argv.device || argv.timeout === undefined
         ? Detector.findFirst
         : Detector.findWhen;
-    
+
     detectorFunction(condition, detectOpts, function(err, device, rinfo) {
         if (err) {
-            console.error(err.message);
+            logError(err.message);
             return;
         }
 
-        action(null, device, rinfo);
+        action(_createDevice(device, rinfo));
     });
     return;
 }
 
-if (argv.timeout === undefined)
-    argv.timeout = DEFAULT_TIMEOUT;
 
-if (argv.pin)
-    argv.pin = '' + argv.pin; // ensure it's a string
+//
+// Util methods
+//
 
-var waker = new Waker(argv.credentials);
-
-function doWake() {
-    var device = argv.device ? {address: argv.device} : undefined;
-    waker.wake(detectOpts, device, function(err) {
-        if (err) return console.error(err);
-
-        console.log("Done!");
-    });
+function logError(err) {
+    // TODO --json flag?
+    console.error(err);
 }
 
-function doRegister(address, creds) {
-
-    var sock = Socket({
-        accountId: creds['user-credential']
-      , host: address
-      , pinCode: argv.pin // if we're already registered, default "" is okay
-    });
-    sock.on('login_result', function(packet) {
-        if (packet.result === 0) {
-            console.log("Logged into device! Future uses should succeed");
-            process.exit(0);
-        } else if (packet.error === "PIN_IS_NEEDED"
-                || packet.error === "PASSCODE_IS_NEEDED") {
-            // NB: pincode auth seems to work just fine
-            //  even if passcode was requested. Shrug.
-
-            console.log("Go to 'Settings -> PlayStation(R) App Connection Settings -> Add Device'" +
-                " on your PS4 to obtain the PIN code.");
-
-            // prompt the user
-            require('readline').createInterface({
-                input: process.stdin
-              , output: process.stdout
-            }).question("Pin code> ", function(pin) {
-                if (!pin) {
-                    console.error("Pin is required");
-                    process.exit(4);
-                }
-
-                sock.login(pin);
-            });
-
-        } else {
-            console.error("Unexpected error", packet.result, packet.error);
-            process.exit(3);
-        }
-    })
-    .on('error', function(err) {
-        console.error('Unable to connect to PS4 at', address, err);
-        process.exit(1);
-    });
+function logResult(result) {
+    // TODO --json flag?
+    console.log(JSON.stringify(result, null, 2));
 }
 
-waker.on('need-credentials', function(targetDevice) {
-    if (argv.failfast) {
-        console.error("No credentials found.");
-        process.exit(1);
-        return;
-    }
+/**
+ * Convenience wrapper for a function that takes a Device
+ *  and performs and action on it, returning a Promise.
+ *  Once the Promise resolves or rejects, the Device is
+ *  close()'d; on error, we call logError and exit with
+ *  an error code
+ */
+function doAndClose(cb) {
+    return function(device) {
+        var promise = cb(device);
 
-    // just assume we need to register as well
-    var address = targetDevice.address;
-    Detector.find(address, detectOpts, function(err, device) {
-        if (err || device.status.toUpperCase() !== 'OK') {
-            console.error("Device must be awake for initial registration");
-            process.exit(2);
-        }
-    
-        console.log("No credentials; Use Playstation App and try to connect to PS4-Waker");
-        waker.requestCredentials(function(err, creds) {
-            if (err) return console.error(err);
-            
-            console.log("Got credentials!", creds);
-
-            // okay, now register
-            doRegister(address, creds);
-        });
-    });
-});
-
-waker.on('device-notified', function(device) {
-    console.log("WAKEUP sent to device...", device.address);
-});
-
-waker.on('logging-in', function() {
-    console.log("Logging in...");
-});
-
-if (argv.pin) {
-    // find the target machine and register
-    var getCredsAndRegister = function(address) {
-        waker.readCredentials(function(err, creds) {
-            // welllll shit. just fire up the need-credentials workflow
-            if (err) return waker.emit('need-credentials', {address: address});
-
-            doRegister(address, creds);
+        promise.then(() => device.close())
+        .catch(e => {
+            logError(e);
+            device.close();
+            process.exit(1);
         });
     };
-
-    if (argv.device) {
-        getCredsAndRegister(argv.device);
-    } else {
-        // find any and do it
-        Detector.findAny(argv.timeout, function(err, device, rinfo) {
-            if (err || !rinfo) {
-                console.error("Couldn't find any PS4");
-                process.exit(1);
-            }
-
-            getCredsAndRegister(rinfo.address);
-        });
-    }
-} else {
-    // do it!
-    doWake();
 }
 
-/** 
- * Returns an action that will prepare
- *  a Socket connection and hand it to your
- *  callback. If we're unable to connect,
- *  we'll simply quit
- */
-function newSocketAction(callback) {
-    return function(err, device, rinfo) {
-        if (err) return console.error(err);
+//
+// Internal factories, etc.
+//
 
-        var waker = new Waker(argv.credentials);
-        waker.readCredentials(function(err, creds) {
-            if (err) {
-                console.error("No credentials found");
-                process.exit(1);
-                return;
-            }
+function _createDevice(deviceInfo, rinfo) {
+    let d = new Device(Object.assign({
+        address: rinfo.address,
+        credentials: rinfo.credentials,
+    }, detectOpts));
 
-            Socket({
-                accountId: creds['user-credential']
-              , host: rinfo.address
-              , pinCode: argv.pin
-            }).on('ready', function() {
-                callback(this);
-            }).on('error', function(err) {
-                console.error('Unable to connect to PS4 at', 
-                    rinfo.address, err);
-                process.exit(1);
-            });
+    // store this so we don't have to re-fetch for search
+    d._info = deviceInfo;
+    d._info.address = rinfo.address;
 
-        });
-    }
+    _setupLogging(d);
+    _setupCredentialHandling(d);
+
+    return d;
+}
+
+function _setupCredentialHandling(d) {
+    // TODO handle initial auth
+
+    d.on('need-credentials', () => {
+        if (argv.failfast) {
+            logError("No credentials found.");
+            process.exit(1);
+            return;
+        }
+
+        console.warn("TODO credential handling");
+    });
+}
+
+function _setupLogging(d) {
+    // TODO if (--json) return;
+
+    d.on('device-notified', function(device) {
+        console.log("WAKEUP sent to device...", device.address);
+    });
+
+    d.on('logging-in', function() {
+        console.log("Logging in...");
+    });
+
+    d.on('error', function(err) {
+        logError('Unable to connect to PS4 at',
+            d._info.address, err);
+    });
 }
