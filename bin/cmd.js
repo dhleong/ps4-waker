@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-var Detector = require('../lib/detector')
-  , Device = require('../lib/device')
-  , Socket = require('../lib/ps4socket')
+var {Detector, Device, Socket} = require('../')
 
   , DEFAULT_TIMEOUT = 10000;
 

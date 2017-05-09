@@ -1,0 +1,5 @@
+lib/
+.babelrc
+.github
+.travis.yml
+test/

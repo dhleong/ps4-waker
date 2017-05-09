@@ -1,3 +1,2 @@
-lib/_config.js
-lib/test.js
 node_modules/
+dist/

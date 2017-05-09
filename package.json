@@ -5,6 +5,8 @@
   "author": "Daniel Leong",
   "main": "index.js",
   "scripts": {
+    "build": "babel lib -d dist",
+    "prepublish": "npm run build",
     "test": "node_modules/mocha/bin/mocha test test/"
   },
   "repository": {
@@ -31,6 +33,8 @@
     "node-rsa": "^0.4.2"
   },
   "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-env": "^1.4.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "mocha": "^3.3.0"
