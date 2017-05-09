@@ -1,5 +1,7 @@
-lib/
 .babelrc
 .github
+.npmignore
 .travis.yml
+lib/
 test/
+release.py
