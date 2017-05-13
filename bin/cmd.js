@@ -27,6 +27,7 @@ if (argv.h || argv.help || argv['?']) {
     console.log('');
     console.log('Usage:');
     console.log('  ps4-waker [options]                                   Wake PS4 device(s)');
+    console.log('  ps4-waker [options] osk-submit (text)                 Submit the OSK, optionally providing the text');
     console.log('  ps4-waker [options] remote <key-name> (...<key-name>) Send remote key-press event(s)');
     console.log('  ps4-waker [options] search                            Search for devices');
     console.log('  ps4-waker [options] standby                           Request the device enter standby/rest mode');
@@ -92,6 +93,20 @@ if (argv.pin) {
             _registerDevice(d, creds);
         });
     };
+} else if (~argv._.indexOf('osk-submit')) {
+    var submit = argv._.indexOf('osk-submit') + 1;
+    var text = argv._[submit];
+
+    action = doAndClose(async function(device) {
+        let osk = await device.getKeyboard();
+        if (text) {
+            await osk.setText(text);
+        }
+
+        await osk.submit();
+
+        await delayMillis(450);
+    });
 } else if (~argv._.indexOf('search')) {
     // search is also a bit of a special case
     action = function(device) {
@@ -158,6 +173,12 @@ if (action) {
 //
 // Util methods
 //
+
+function delayMillis(millis) {
+    return new Promise((resolve) => {
+        setTimeout(resolve.bind(resolve, true), millis);
+    });
+}
 
 function logError(err, ...args) {
     // TODO --json flag?

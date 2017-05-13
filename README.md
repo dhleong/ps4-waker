@@ -22,6 +22,7 @@ ps4-waker - Wake your PS4 (and more!) with help from the Playstation App
 
 Usage:
   ps4-waker [options]                                   Wake PS4 device(s)
+  ps4-waker [options] osk-submit (text)                 Submit the OSK, optionally providing the text
   ps4-waker [options] remote <key-name> (...<key-name>) Send remote key-press event(s)
   ps4-waker [options] search                            Search for devices
   ps4-waker [options] standby                           Request the device enter standby/rest mode
@@ -113,9 +114,9 @@ should work. Pull requests are welcome, however, if extra twiddling is needed
 for smooth operation on Windows or Linux.
 
 The TCP connection API is exposed via `require('ps4-waker').Socket`, and the
-PS4 detection as `require('ps4-waker').Detector`. In the future, these may
-be broken out into a separate library, perhaps with more features from the app,
-such as "on screen keyboard" simulation.
+PS4 detection as `require('ps4-waker').Detector`. As noted above, though,
+for most cases you probably should prefer the `Device` API via
+`require('ps4-waker').Device`.
 See the sources in the lib directory for more information on these modules.
 
 ### Acknowledgements
@@ -128,7 +129,7 @@ it is not necessary to own a Vita or to look at any packets with `ps4-waker`.
 ### Disclaimer
 
 I take no responsibility for your usage of this code, whatsoever. By using this
-code, directly or indirectly, you agree that I shall not be held responsible 
+code, directly or indirectly, you agree that I shall not be held responsible
 in any way for anything that may happen to you or any of your devices, etc.
-as a result, directly or indirectly, of your use of this project, in any way 
+as a result, directly or indirectly, of your use of this project, in any way
 whatsoever, etc. etc.
