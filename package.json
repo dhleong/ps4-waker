@@ -27,7 +27,7 @@
   "preferGlobal": true,
   "homepage": "https://github.com/dhleong/ps4-waker",
   "dependencies": {
-    "minimist": "^0.1.0",
+    "minimist": "^1.2.0",
     "node-rsa": "^0.4.2"
   },
   "devDependencies": {
@@ -35,6 +35,6 @@
     "babel-preset-env": "^1.4.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
-    "mocha": "^3.3.0"
+    "mocha": "^3.4.1"
   }
 }
