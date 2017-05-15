@@ -28,7 +28,6 @@
   "homepage": "https://github.com/dhleong/ps4-waker",
   "dependencies": {
     "minimist": "^0.1.0",
-    "q": "^1.0.1",
     "node-rsa": "^0.4.2"
   },
   "devDependencies": {
