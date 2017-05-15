@@ -97,15 +97,18 @@ if (argv.pin) {
     var submit = argv._.indexOf('osk-submit') + 1;
     var text = argv._[submit];
 
-    action = doAndClose(async function(device) {
-        let osk = await device.getKeyboard();
-        if (text) {
-            await osk.setText(text);
-        }
-
-        await osk.submit();
-
-        await delayMillis(450);
+    action = doAndClose(device => {
+        return device.getKeyboard().then(osk => {
+            if (text) {
+                return osk.setText(text);
+            } else {
+                return Promise.resolve(osk);
+            }
+        }).then(osk => {
+            return osk.submit();
+        }).then(() => {
+            return delayMillis(450);
+        });
     });
 } else if (~argv._.indexOf('search')) {
     // search is also a bit of a special case
