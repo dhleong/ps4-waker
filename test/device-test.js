@@ -2,7 +2,9 @@
 const events = require('events');
 const EventEmitter = events.EventEmitter;
 const chai = require('chai');
-const {Device, Socket} = require('../');
+// const {Device, Socket} = require('../');
+const Device = require('../lib/device');
+const Socket = require('../lib/ps4socket');
 
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
@@ -369,6 +371,27 @@ describe("Device", function() {
                     ['*setTimeout', 200],
                 ]);
             });
+        });
+
+        it("doesn't wait when it connected a while ago", function() {
+            return (async () => {
+                await device.openSocket();
+                device._connectedAt = Date.now() - 3000;
+                await device.sendKeys(['up']);
+
+                events.should.deep.equal([
+                    ['send_rc_key', Socket.RCKeys.OPEN_RC],
+                    ['*setTimeout', 200],
+
+                    ['send_rc_key', Socket.RCKeys.UP],
+                    ['send_rc_key', Socket.RCKeys.KEY_OFF],
+                    ['sent-key', 'UP'],
+                    ['*setTimeout', 200],
+
+                    ['send_rc_key', Socket.RCKeys.CLOSE_RC],
+                    ['*setTimeout', 200],
+                ]);
+            })();
         });
     });
 
