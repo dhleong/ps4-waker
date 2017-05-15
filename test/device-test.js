@@ -12,6 +12,22 @@ chai.use(chaiAsPromised);
 // var expect = chai.expect;
 chai.should();
 
+chai.Assertion.addProperty('sendKeyInitialDelay', function() {
+    this.assert(
+        this._obj[0][0] === '*setTimeout'
+      , 'expected #{this} to start with the sendKeyInitialDelay'
+      , 'expected #{this} to NOT start with the sendKeyInitialDelay'
+    );
+
+    this.assert(
+        this._obj[0][1] >= 1495 && this._obj[0][1] <= 1500
+      , 'expected #{this} to start with the sendKeyInitialDelay'
+      , 'expected #{this} to NOT start with the sendKeyInitialDelay'
+    );
+
+    this._obj = this._obj.slice(1);
+});
+
 class FakeSocket extends EventEmitter {
     constructor(device) {
         super();
@@ -294,8 +310,8 @@ describe("Device", function() {
 
         it("Sends single direction", function() {
             return device.sendKeys(['right']).then(function() {
-                events.should.deep.equal([
-                    ['*setTimeout', 1500],
+                events.should.have.sendKeyInitialDelay
+                .and.deep.equal([
                     ['send_rc_key', Socket.RCKeys.OPEN_RC],
                     ['*setTimeout', 200],
 
@@ -312,8 +328,8 @@ describe("Device", function() {
 
         it("Holds direction", function() {
             return device.sendKeys([['left', 1000]]).then(function() {
-                events.should.deep.equal([
-                    ['*setTimeout', 1500],
+                events.should.have.sendKeyInitialDelay
+                .and.deep.equal([
                     ['send_rc_key', Socket.RCKeys.OPEN_RC],
                     ['*setTimeout', 200],
 
@@ -334,8 +350,8 @@ describe("Device", function() {
 
         it("Sends single ps press", function() {
             return device.sendKeys(['ps']).then(function() {
-                events.should.deep.equal([
-                    ['*setTimeout', 1500],
+                events.should.have.sendKeyInitialDelay
+                .and.deep.equal([
                     ['send_rc_key', Socket.RCKeys.OPEN_RC],
                     ['*setTimeout', 200],
 
@@ -353,8 +369,8 @@ describe("Device", function() {
 
         it("holds PS button", function() {
             return device.sendKeys([['ps', 1000]]).then(function() {
-                events.should.deep.equal([
-                    ['*setTimeout', 1500],
+                events.should.have.sendKeyInitialDelay
+                .and.deep.equal([
                     ['send_rc_key', Socket.RCKeys.OPEN_RC],
                     ['*setTimeout', 200],
 
