@@ -41,9 +41,10 @@ if (argv.h || argv.help || argv['?']) {
     console.log('  --credentials | -c <file>    Specify credentials file');
     console.log('  --device | -d <ip>           Specify IP address of a specific PS4');
     console.log('  --failfast                   Don\'t request credentials if none');
+    console.log('  --skip-login                 Don\'t automatically login');
+    console.log('  --pin <pin-code>             Manual pin-code registration');
     console.log('  --timeout | -t <time>        Stop searching after <time> milliseconds; the default timeout') ;
     console.log('                                unspecified is 10 seconds');
-    console.log('  --pin <pin-code>             Manual pin-code registration');
     console.log('');
     console.log('Device selection:');
     console.log('  For any command, there are four possible conditions based on the flags you\'ve specified:');
@@ -227,10 +228,13 @@ function doAndClose(cb) {
 //
 
 function _createDevice(deviceInfo, rinfo) {
-    let d = new Device(Object.assign({
+    let d = new Device({
         address: rinfo.address,
         credentials: argv.credentials,
-    }, detectOpts));
+        autoLogin: !argv['skip-login'],
+
+        ...detectOpts,
+    });
 
     // store this so we don't have to re-fetch for search
     d._info = deviceInfo;

@@ -96,9 +96,10 @@ verify(versionTag.exists())\
     .then(echoAndDie("Version `%s` already exists!" % version))
 
 #
-# Make sure all the tests pass
+# Make sure we can build it and that all the tests pass
 #
 
+verify(Execute("npm run build")).succeeds(silent=False).orElse(die())
 verify(Execute("npm test")).succeeds(silent=False).orElse(die())
 
 #
