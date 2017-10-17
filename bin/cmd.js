@@ -228,13 +228,11 @@ function doAndClose(cb) {
 //
 
 function _createDevice(deviceInfo, rinfo) {
-    let d = new Device({
+    let d = new Device(Object.assign({
         address: rinfo.address,
         credentials: argv.credentials,
         autoLogin: !argv['skip-login'],
-
-        ...detectOpts,
-    });
+    }, detectOpts));
 
     // store this so we don't have to re-fetch for search
     d._info = deviceInfo;
