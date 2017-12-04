@@ -7,7 +7,7 @@ the Playstation App.
 ### Requirements
 
 - A PS4, of course
-- The Playstation App, installed on your phone or tablet of choice
+- The PS4 Second Screen App, installed on your phone or tablet of choice
 - A computer
 - All of the above on the same LAN
 

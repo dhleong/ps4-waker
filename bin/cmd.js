@@ -258,7 +258,7 @@ function _setupCredentialHandling(d) {
             process.exit(2);
         }
 
-        logEvent("No credentials; Use Playstation App and try to connect to PS4-Waker");
+        logEvent("No credentials; Use the PS4 Second Screen App and try to connect to PS4-Waker");
         d._waker().requestCredentials(function(err, creds) {
             if (err) return logError(err);
 
