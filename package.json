@@ -8,7 +8,7 @@
   "scripts": {
     "build": "babel lib -d dist",
     "prepublish": "npm run build",
-    "test": "node_modules/mocha/bin/mocha test test/"
+    "test": "mocha --compilers js:babel-core/register test test/"
   },
   "repository": {
     "type": "git",
@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.4.0",
     "chai": "^3.5.0",
