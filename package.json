@@ -25,6 +25,10 @@
   "bugs": {
     "url": "https://github.com/dhleong/ps4-waker/issues"
   },
+  "engines" : {
+    "node": ">=6",
+    "npm": ">=3"
+  },
   "preferGlobal": true,
   "homepage": "https://github.com/dhleong/ps4-waker",
   "dependencies": {
