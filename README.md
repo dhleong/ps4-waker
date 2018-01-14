@@ -15,7 +15,15 @@ the Playstation App.
 
 [![NPM](https://nodei.co/npm/ps4-waker.png?mini=true)](https://nodei.co/npm/ps4-waker/)
 
-Installing globally provides the `ps4-waker` executable:
+You can either install it globally with `npm i ps4-waker -g` (>= Node 6)
+or execute it directly in a >= Node 7 environment with `npx ps4-waker`
+and run for example:
+
+```shell
+npx ps4-waker --help
+```
+
+to get the following usage information:
 
 ```
 ps4-waker - Wake your PS4 (and more!) with help from the Playstation App
