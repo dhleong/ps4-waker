@@ -304,7 +304,7 @@ function _setupLogging(d) {
 function _handleLoginError(sock, packet, exitProcess) {
     switch (packet.error) {
     case "PIN_IS_NEEDED":
-        logEvent("Go to 'Settings -> PlayStation(R) App Connection Settings -> Add Device'" +
+        logEvent("Go to 'Settings -> Mobile App Connection Settings -> Add Device'" +
             " on your PS4 to obtain the PIN code.");
 
         if (sock) {
