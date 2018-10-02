@@ -6,6 +6,7 @@ var {Detector, Device, Socket} = require('../')
 
 const argv = require('minimist')(process.argv.slice(2), {
     default: {
+        pass: '',
         pin: ''
     },
     alias: {
@@ -14,7 +15,8 @@ const argv = require('minimist')(process.argv.slice(2), {
         timeout: 't',
         bind: 'b',
         'bind-port': 'p'
-    }
+    },
+    string: ['pass', 'pin'],
 });
 
 if (argv.v || argv.version) {
@@ -43,6 +45,7 @@ if (argv.h || argv.help || argv['?']) {
     console.log('  --failfast                   Don\'t request credentials if none');
     console.log('  --skip-login                 Don\'t automatically login');
     console.log('  --pin <pin-code>             Manual pin-code registration');
+    console.log('  --pass <passcode>            Provide passcode for login, if needed');
     console.log('  --timeout | -t <time>        Stop searching after <time> milliseconds; the default timeout') ;
     console.log('                                unspecified is 10 seconds');
     console.log('');
@@ -232,6 +235,7 @@ function _createDevice(deviceInfo, rinfo) {
         address: rinfo.address,
         credentials: argv.credentials,
         autoLogin: !argv['skip-login'],
+        passCode: argv.pass,
     }, detectOpts));
 
     // store this so we don't have to re-fetch for search
@@ -285,10 +289,62 @@ function _setupLogging(d) {
         console.log("Sent key", k);
     });
 
+    d.on('login_result', packet => {
+        if (packet.result !== 0) {
+            _handleLoginError(null, packet, false);
+        }
+    });
+
     d.on('error', function(err) {
         logError('Unable to connect to PS4 at',
             d._info.address, err);
     });
+}
+
+function _handleLoginError(sock, packet, exitProcess) {
+    switch (packet.error) {
+    case "PIN_IS_NEEDED":
+        logEvent("Go to 'Settings -> PlayStation(R) App Connection Settings -> Add Device'" +
+            " on your PS4 to obtain the PIN code.");
+
+        if (sock) {
+            // prompt the user
+            require('readline').createInterface({
+                input: process.stdin
+                , output: process.stdout
+            }).question("Pin code> ", function(pin) {
+                if (!pin) {
+                    logError("Pin is required");
+                    process.exit(4);
+                }
+
+                sock.login(pin);
+            });
+        }
+        break;
+
+    case "PASSCODE_IS_NEEDED":
+        logError("Login error: Passcode is required");
+
+        if (exitProcess) {
+            process.exit(4);
+        }
+        break;
+
+    case "PASSCODE_IS_UNMATCHED":
+        logError("Login error: Incorrect Passcode");
+
+        if (exitProcess) {
+            process.exit(5);
+        }
+        break;
+
+    default:
+        logError("Unexpected error:" + packet.result + " / " + packet.error);
+        if (exitProcess) {
+            process.exit(3);
+        }
+    }
 }
 
 function _registerDevice(d, creds) {
@@ -302,36 +358,16 @@ function _registerDevice(d, creds) {
         // if we're already registered, default "" is okay:
         // also, it MUST be a string
       , pinCode: '' + (argv.pin || "")
+
+        // only necessary if you've enabled it on your account
+      , passCode: '' + (argv.pass || "")
     });
     sock.on('login_result', function(packet) {
         if (packet.result === 0) {
             logResult("Logged into device! Future uses should succeed");
             process.exit(0);
-        } else if (packet.error === "PIN_IS_NEEDED"
-                || packet.error === "PASSCODE_IS_NEEDED") {
-            // NB: pincode auth seems to work just fine
-            //  even if passcode was requested. Shrug.
-
-            logEvent("Go to 'Settings -> PlayStation(R) App Connection Settings -> Add Device'" +
-                " on your PS4 to obtain the PIN code.");
-
-            // prompt the user
-            require('readline').createInterface({
-                input: process.stdin
-              , output: process.stdout
-            }).question("Pin code> ", function(pin) {
-                if (!pin) {
-                    logError("Pin is required");
-                    process.exit(4);
-                }
-
-                sock.login(pin);
-            });
-
         } else {
-            logError("Unexpected error:" +
-                packet.result + " / " + packet.error);
-            process.exit(3);
+            _handleLoginError(sock, packet, true);
         }
     })
     .on('error', function(err) {

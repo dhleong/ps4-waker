@@ -44,9 +44,11 @@ Options:
   --credentials | -c <file>    Specify credentials file
   --device | -d <ip>           Specify IP address of a specific PS4
   --failfast                   Don't request credentials if none
-  --timeout | -t <time>        Stop searching after <time> milliseconds; the default timeout 
-                                unspecified is 10 seconds
+  --skip-login                 Don't automatically login
   --pin <pin-code>             Manual pin-code registration
+  --pass <passcode>            Provide passcode for login, if needed
+  --timeout | -t <time>        Stop searching after <time> milliseconds; the default timeout
+                                unspecified is 10 seconds
 
 Device selection:
   For any command, there are four possible conditions based on the flags you've specified:
