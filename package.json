@@ -35,6 +35,7 @@
   "homepage": "https://github.com/dhleong/ps4-waker",
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
+    "debug": "^4.1.0",
     "minimist": "^1.2.0",
     "node-rsa": "^0.4.2"
   },
