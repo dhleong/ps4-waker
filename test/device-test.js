@@ -233,7 +233,7 @@ describe("Device", function() {
             return device.turnOn().then(() => {
 
                 waker.calls.should.have.length(1);
-                waker.calls.should.have.deep.property(
+                waker.calls.should.have.nested.property(
                     '[0][1].address',
                     '123.456.789.0');
 
