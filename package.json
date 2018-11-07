@@ -10,7 +10,7 @@
     "dev": "babel lib -d dist -w",
     "lint": "eslint lib",
     "prepublish": "npm run build",
-    "test": "mocha --compilers js:babel-core/register test test/"
+    "test": "mocha --compilers js:@babel/register test test/"
   },
   "repository": {
     "type": "git",
@@ -34,14 +34,15 @@
   "preferGlobal": true,
   "homepage": "https://github.com/dhleong/ps4-waker",
   "dependencies": {
+    "@babel/polyfill": "^7.0.0",
     "minimist": "^1.2.0",
     "node-rsa": "^0.4.2"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
+    "@babel/cli": "^7.1.5",
+    "@babel/core": "^7.1.5",
+    "@babel/preset-env": "^7.1.5",
+    "@babel/register": "^7.0.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "eslint": "^5.6.1",
