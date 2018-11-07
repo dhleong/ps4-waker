@@ -80,6 +80,7 @@ class FakeWaker {
     constructor() {
         this.calls = [];
         this.pendingResults = [];
+        this.loginResult = {}; // success by default
     }
 
     wake(opts, device, cb) {
@@ -92,6 +93,11 @@ class FakeWaker {
         let result = this.pendingResults.shift();
 
         cb(...result);
+
+        const [err, socket] = result;
+        if (socket) {
+            socket.emit('login_result', this.loginResult);
+        }
     }
 }
 
@@ -129,7 +135,9 @@ describe("Device", function() {
         let _deviceDotEmit = device.emit.bind(device);
         device.emit = function(...args) {
             _deviceDotEmit(...args);
-            events.push(args);
+            if (args[0] !== 'login_result') {
+                events.push(args);
+            }
         };
 
         // patch setTimeout so we don't have to wait
@@ -262,6 +270,20 @@ describe("Device", function() {
             socket.pendingStandbyResults = ["Error", null];
 
             return device.turnOff().should.become(device);
+        });
+
+        // NOTE: this test describes the behavior for all
+        // login-requiring methods:
+        it("Rejects early when login fails", function() {
+            pendingDetectPromise = Promise.resolve({
+                address: '123.456.789.0',
+                status: 'OK'
+            });
+
+            waker.pendingResults.push([null, socket]);
+            waker.loginResult = {error: "Login error"}
+
+            return device.turnOff().should.be.rejectedWith(/Login error/);
         });
 
         it("Errors on second error", function() {
