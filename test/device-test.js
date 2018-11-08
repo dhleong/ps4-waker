@@ -92,12 +92,12 @@ class FakeWaker {
 
         let result = this.pendingResults.shift();
 
-        cb(...result);
-
         const [err, socket] = result;
         if (socket) {
-            socket.emit('login_result', this.loginResult);
+            socket._loginResult = this.loginResult;
         }
+
+        cb(...result);
     }
 }
 
