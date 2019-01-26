@@ -87,6 +87,7 @@ module.exports = {
             "error",
             "beside"
         ],
+        "import/order": "off",
         "indent": "off",
         "indent-legacy": "error",
         "init-declarations": "off",
@@ -120,7 +121,7 @@ module.exports = {
             "error",
             "separate-lines"
         ],
-        "multiline-ternary": "error",
+        "multiline-ternary": "off",
         "new-parens": "error",
         "newline-after-var": "off",
         "newline-before-return": "off",
@@ -270,7 +271,7 @@ module.exports = {
             "error",
             "last"
         ],
-        "sort-imports": "error",
+        "sort-imports": "off",
         "sort-keys": "off",
         "sort-vars": "error",
         "space-before-blocks": "error",

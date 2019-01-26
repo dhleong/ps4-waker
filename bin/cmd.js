@@ -21,7 +21,7 @@ const argv = require('minimist')(process.argv.slice(2), {
 
 if (argv.v || argv.version) {
     console.log(require('../package.json').version);
-    return;
+    process.exit(0);
 }
 
 if (argv.h || argv.help || argv['?']) {
@@ -29,6 +29,7 @@ if (argv.h || argv.help || argv['?']) {
     console.log('');
     console.log('Usage:');
     console.log('  ps4-waker [options]                                   Wake PS4 device(s)');
+    console.log('  ps4-waker [options] check                             Check a device\'s status');
     console.log('  ps4-waker [options] osk-submit (text)                 Submit the OSK, optionally providing the text');
     console.log('  ps4-waker [options] remote <key-name> (...<key-name>) Send remote key-press event(s)');
     console.log('  ps4-waker [options] search                            Search for devices');
@@ -67,7 +68,7 @@ if (argv.h || argv.help || argv['?']) {
     console.log('   and they will be sent sequentially.');
     console.log('  In addition, a key name may be followed by a colon and a duration in ');
     console.log('   milliseconds to hold that key, eg: ps4-waker remote ps:1000');
-    return;
+    process.exit(0);
 }
 
 var detectOpts = {
@@ -147,7 +148,23 @@ if (argv.pin) {
     });
 
     action = doAndClose(device => device.sendKeys(keyNames));
+} else if (~argv._.indexOf('check')) {
+    action = function(device) {
+        logResult(device._info);
+        device.close();
 
+        switch (device._info.statusCode) {
+        case '200':
+            process.exit(0);
+            break;
+        case '620':
+            // "standby"
+            process.exit(1);
+            break;
+        default:
+            process.exit(2);
+        }
+    };
 } else {
     // default is simple "wake"
     action = doAndClose(device => device.turnOn());
@@ -173,7 +190,6 @@ if (action) {
 
         action(_createDevice(device, rinfo));
     });
-    return;
 }
 
 
