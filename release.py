@@ -26,7 +26,7 @@ latestTag = git.Tag.latest()
 def formatIssue(issue):
     return "- {title} (#{number})\n".format(
             number=issue.number,
-            title=issue.title)
+            title=issue.title.encode('utf-8'))
 
 def buildLabeled(labelsToTitles):
     """Given a set of (label, title) tuples, produces an
