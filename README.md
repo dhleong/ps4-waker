@@ -81,6 +81,16 @@ you will be asked to connect to the "PS4-Waker" Playstation, and to turn on
 your PS4 and go to the "add devices" screen to get a pin code, and enter that.
 After that, future executions should just work.
 
+Note that for the initial registration we *have to* be able to bind to port 987,
+since the PS4 seems to be hard-coded to attempt to connect on that port. On most
+systems, this port is privileged, which means we need super-user permission to
+bind to it. If run on a system with `sudo`, we will attempt to use that to
+restart and prompt for permissions, and will then relinquish those elevated
+permissions using `setuid` immediately after binding to the port, so that the
+credentials file is not created as root (and to minimize any potential risk
+involved with holding root privileges). If you don't want this behavior, you can
+use the `--failfast` option.
+
 ### Scripting API
 
 For finer control, especially in a home-automation context, you may want to use
