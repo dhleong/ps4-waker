@@ -17,7 +17,7 @@ describe('Command', function() {
         };
     });
 
-    it('ensure device is awake before registration', async function() {
+    it('ensures device is awake before registration', async function() {
         command.needsCredentials = true;
         command.detectedQueue.push([null, {
             status: 'Standby',
@@ -29,7 +29,34 @@ describe('Command', function() {
         ui.exitCode.should.not.equal(0);
     });
 
-    it('handle registration against the UI', async function() {
+    it('handles creds without pin', async function() {
+        command.detectedQueue.push([null, {
+            status: 'Ok',
+        }, {address: 'address'}]);
+        command.loginResultPackets = [{
+            result: 1,
+            error: 'PIN_IS_NEEDED',
+        }, {
+            result: 0
+        }];
+
+        let didPrompt = false;
+        ui.prompt = async () => {
+            didPrompt = true;
+            return '12345678';
+        };
+
+        await command.run(ui);
+
+        ui.loggedEvents.should.not.be.empty;
+        ui.loggedEvents[0].should.contain('obtain the PIN');
+        didPrompt.should.be.true;
+
+        ui.loggedEvents.should.have.lengthOf(2);
+        ui.loggedEvents[1].should.contain('succeed');
+    });
+
+    it('handles registration against the UI', async function() {
         command.needsCredentials = true;
         command.detectedQueue.push([null, {
             status: 'Ok',
