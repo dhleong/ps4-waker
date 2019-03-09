@@ -3,3 +3,4 @@ node_js:
     - "node"
     - "8"
     - "6"
+script: npm run check

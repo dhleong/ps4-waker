@@ -7,6 +7,7 @@
   "main": "index.js",
   "scripts": {
     "build": "babel lib -d dist",
+    "check": "npm run lint && npm run build && npm run test",
     "dev": "babel lib -d dist -w",
     "lint": "eslint lib",
     "prepublish": "npm run build",
