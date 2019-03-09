@@ -10,7 +10,7 @@
     "dev": "babel lib -d dist -w",
     "lint": "eslint lib",
     "prepublish": "npm run build",
-    "test": "mocha --require @babel/register test test/"
+    "test": "mocha --require @babel/register test test/**"
   },
   "repository": {
     "type": "git",
@@ -22,7 +22,7 @@
     "wol"
   ],
   "bin": {
-    "ps4-waker": "./bin/cmd.js"
+    "ps4-waker": "./dist/cli.js"
   },
   "bugs": {
     "url": "https://github.com/dhleong/ps4-waker/issues"

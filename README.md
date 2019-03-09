@@ -29,43 +29,49 @@ to get the following usage information:
 ps4-waker - Wake your PS4 (and more!) with help from the Playstation App
 
 Usage:
-  ps4-waker [options]                                   Wake PS4 device(s)
-  ps4-waker [options] osk-submit (text)                 Submit the OSK, optionally providing the text
-  ps4-waker [options] remote <key-name> (...<key-name>) Send remote key-press event(s)
-  ps4-waker [options] search                            Search for devices
-  ps4-waker [options] standby                           Request the device enter standby/rest mode
-  ps4-waker [options] start <titleId>                   Start a specified title id
-  ps4-waker --help | -h | -?                  Shows this help message.
-  ps4-waker --version | -v                    Show package version.
+  ps4-waker [options]                       Wake PS4 device(s)
+  ps4-waker [options] osk-submit [text]     Submit the OSK, optionally
+                                            providing the text
+  ps4-waker [options] remote <key-name...>  Send remote key-press event(s)
+  ps4-waker [options] search                Search for devices
+  ps4-waker [options] standby               Request the device enter
+                                            standby/rest mode
+  ps4-waker [options] start <titleId>       Start a specified title id
+  ps4-waker --help | -h | -?                Shows this help message.
+  ps4-waker --version | -v                  Show package version.
 
 Options:
-  --bind | -b <ip>             Bind to a specific network adapter IP, if you have multiple
-  --bind-port | -p <port>      Bind on a specific port, if you need to route specifically
+  --bind | -b <ip>             Bind to a specific network adapter IP, if
+                               you have multiple
+  --bind-port | -p <port>      Bind on a specific port, if you need to
+                               route specifically
   --credentials | -c <file>    Specify credentials file
   --device | -d <ip>           Specify IP address of a specific PS4
   --failfast                   Don't request credentials if none
   --skip-login                 Don't automatically login
   --pin <pin-code>             Manual pin-code registration
   --pass <passcode>            Provide passcode for login, if needed
-  --timeout | -t <time>        Stop searching after <time> milliseconds; the default timeout
-                                unspecified is 10 seconds
+  --timeout | -t <time>        Stop searching after <time> milliseconds;
+                               the default timeout, if unspecified, is 10
+                               seconds
 
 Device selection:
-  For any command, there are four possible conditions based on the flags you've specified:
-    1. Neither -t nor -d: Will act on the first device found; this is for households
-        with a single device on the network
+  For any command, there are four possible conditions based on the flags
+  you've specified:
+    1. Neither -t nor -d: Will act on the first device found; this is for
+       households with a single device on the network
     2. Just -t: Will act on every device found within <time> millseconds
-    3. Just -d: Will search for at most 10 seconds (the default timeout) for and only act on
-        the provided device, quitting if found
-    4. Both -t and -d: Will search for at most <time> seconds for and only act on the
-        provided device, qutting early if found.
+    3. Just -d: Will search for at most 10 seconds (the default timeout)
+       for and only act on the provided device, quitting if found
+    4. Both -t and -d: Will search for at most <time> seconds for and only
+       act on the provided device, qutting early if found.
 
 Key names:
   Button names are case insensitive, and can be one of:
     up, down, left, right, enter, back, option, ps
-  You cannot send the actual x, square, etc. buttons
-  A string of key presses may be provided, separated by spaces,
-   and they will be sent sequentially.
+  You cannot send the actual x, square, etc. buttons.
+  A string of key presses may be provided, separated by spaces, and they
+   will be sent sequentially.
   In addition, a key name may be followed by a colon and a duration in
    milliseconds to hold that key, eg: ps4-waker remote ps:1000
 ```

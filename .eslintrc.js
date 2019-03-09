@@ -8,6 +8,7 @@ module.exports = {
         "ecmaVersion": 2018
     },
     "rules": {
+        "class-methods-use-this": "off",
         "arrow-body-style": "off",
         "func-names": "off", // for now
         "indent": ["error", 4],
