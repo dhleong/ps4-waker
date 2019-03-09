@@ -10,7 +10,7 @@
     "dev": "babel lib -d dist -w",
     "lint": "eslint lib",
     "prepublish": "npm run build",
-    "test": "mocha --require @babel/register test test/"
+    "test": "mocha --require @babel/register test test/**"
   },
   "repository": {
     "type": "git",
