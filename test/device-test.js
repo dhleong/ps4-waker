@@ -192,6 +192,21 @@ describe("Device", function() {
         });
     });
 
+    describe("._connect", function() {
+        it("respects autoLogin: false", async function() {
+            pendingDetectPromise = Promise.resolve({
+                status: 'Standby'
+            });
+
+            waker.pendingResults.push([null, null]);
+            await device._connect(false).should.become(undefined);
+
+            waker.calls.should.have.lengthOf(1);
+            waker.calls.should.have.nested.property('[0][0].autoLogin')
+                .that.is.false;
+        });
+    });
+
     describe("._connectIfAwake", function() {
         it("resolves to null when not awake", function() {
             pendingDetectPromise = Promise.resolve({
