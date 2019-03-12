@@ -262,6 +262,60 @@ describe("Device", function() {
 
             }).catch(assertUnexpectedError);
         });
+
+        it("Waits for successful login if timeOut=false", async function() {
+            pendingDetectPromise = Promise.resolve({
+                address: '123.456.789.0',
+                status: 'OK'
+            });
+
+            waker.pendingResults.push([null, socket]);
+
+            const raceResult = await Promise.race([
+                device.turnOn(/* timeOut = */ false),
+                new Promise((resolve) => _originalSetTimeout(() =>
+                    resolve('timeout'),
+                    10
+                )),
+            ]);
+            raceResult.should.equal('timeout');
+        });
+
+        it("Finishes with successful login if timeOut=false", async function() {
+            pendingDetectPromise = Promise.resolve({
+                address: '123.456.789.0',
+                status: 'OK'
+            });
+
+            waker.pendingResults.push([null, socket]);
+
+            const raceResultWithLogin = await Promise.race([
+                device.turnOn(/* timeOut = */ false),
+                new Promise((resolve) => {
+                    _originalSetTimeout(() => {
+                        device.emit('login_result', {result: 0});
+
+                        console.log('delay');
+
+                        _originalSetTimeout(() => resolve('delay'), 1000);
+                    }, 10);
+                }),
+            ]);
+
+            raceResultWithLogin.should.not.equal('delay');
+        });
+
+        it("Finishes immediately with successful login if timeOut=false", async function() {
+            pendingDetectPromise = Promise.resolve({
+                address: '123.456.789.0',
+                status: 'OK'
+            });
+
+            waker.pendingResults.push([null, socket]);
+            waker.loginResult = {result: 0};
+
+            await device.turnOn(/* timeOut = */ false);
+        });
     });
 
     describe(".turnOff", function() {
