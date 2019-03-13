@@ -30,6 +30,7 @@ ps4-waker - Wake your PS4 (and more!) with help from the Playstation App
 
 Usage:
   ps4-waker [options]                       Wake PS4 device(s)
+  ps4-waker [options] check                 Check a device's status
   ps4-waker [options] osk-submit [text]     Submit the OSK, optionally
                                             providing the text
   ps4-waker [options] remote <key-name...>  Send remote key-press event(s)
@@ -65,6 +66,14 @@ Device selection:
        for and only act on the provided device, quitting if found
     4. Both -t and -d: Will search for at most <time> seconds for and only
        act on the provided device, qutting early if found.
+
+Checking device status:
+  The "check" command provides output similar to "search," but only for
+  the first matching device found (see above). In addition, it will exit
+  with code '0' only if the device is awake; if it is in standby, it
+  will exit with code '1', and in any other situation it will exit with
+  code '2'. This command is intended to simplify initial state detection
+  for home automation users.
 
 Key names:
   Button names are case insensitive, and can be one of:
