@@ -17,6 +17,16 @@ describe('Command', function() {
         };
     });
 
+    it('shows error when no matching device could be found', async function() {
+        command.needsCredentials = true;
+        command.detectedQueue.push([new Error('Could not detect any matching PS4 device')]);
+        await command.run(ui);
+
+        ui.loggedErrors.should.not.be.empty;
+        ui.loggedErrors[0].should.contain('any matching');
+        ui.exitCode.should.not.equal(0);
+    });
+
     it('ensures device is awake before registration', async function() {
         command.needsCredentials = true;
         command.detectedQueue.push([null, {
