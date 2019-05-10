@@ -1,7 +1,7 @@
 {
   "name": "ps4-waker",
   "description": "Wake your PS4 over LAN (and more!) with help from the Playstation App",
-  "version": "1.8.4",
+  "version": "1.8.5",
   "author": "Daniel Leong",
   "license": "MIT",
   "main": "index.js",
@@ -10,7 +10,7 @@
     "check": "npm run lint && npm run build && npm run test",
     "dev": "babel lib -d dist -w",
     "lint": "eslint lib",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "test": "mocha --require @babel/register test test/**"
   },
   "repository": {
@@ -36,6 +36,7 @@
   "homepage": "https://github.com/dhleong/ps4-waker",
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
+    "core-js": "^3.0.1",
     "debug": "^4.1.0",
     "minimist": "^1.2.0",
     "node-rsa": "^0.4.2"
