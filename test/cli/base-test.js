@@ -114,4 +114,18 @@ describe('Command', function() {
         ui.loggedResults[0].should.contain('succeed');
         ui.exitCode.should.equal(0);
     });
+
+    it('fails early in invalid --skip-login use', async function() {
+        command.detectedQueue.push([null, {
+            status: 'Ok',
+        }, {address: 'address'}]);
+
+        ui.options.skipLogin = true;
+
+        await command.run(ui);
+
+        ui.loggedErrors.should.not.be.empty;
+        ui.loggedErrors[0].should.contain('--skip-login may not be used');
+        ui.exitCode.should.not.equal(0);
+    });
 });
