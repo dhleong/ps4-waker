@@ -81,6 +81,21 @@ describe('Command', function() {
         ui.exitCode.should.not.equal(0);
     });
 
+    it('does not get hung up when PASSCODE_IS_NEEDED', async function() {
+        command.detectedQueue.push([null, {
+            status: 'Ok',
+        }, {address: 'address'}]);
+        command.loginResultPackets = [{
+            result: 22,
+            error: 'PASSCODE_IS_NEEDED',
+        }];
+
+        await command.run(ui);
+
+        ui.loggedErrors.should.not.be.empty;
+        ui.exitCode.should.not.equal(0);
+    });
+
     it('handles registration against the UI', async function() {
         command.needsCredentials = true;
         command.detectedQueue.push([null, {
