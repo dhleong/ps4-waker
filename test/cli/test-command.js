@@ -86,6 +86,9 @@ module.exports = class TestCommand extends CommandOnDevice {
 
     _createFakeSocket() {
         const socket = new EventEmitter();
+        socket.close = () => {
+            setTimeout(() => socket.emit('disconnected'));
+        };
         socket.login = () => {
             this._emitNextLoginResult(socket);
         };
