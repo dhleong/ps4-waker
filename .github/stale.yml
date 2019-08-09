@@ -5,3 +5,4 @@ exemptLabels:
   - security
   - bug
   - enhancement
+  - :grey_exclamation: information
