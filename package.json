@@ -35,23 +35,23 @@
   "preferGlobal": true,
   "homepage": "https://github.com/dhleong/ps4-waker",
   "dependencies": {
-    "@babel/polyfill": "^7.6.0",
-    "core-js": "^3.3.6",
+    "@babel/polyfill": "^7.10.4",
+    "core-js": "^3.6.5",
     "debug": "^4.1.1",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.5",
     "node-rsa": "^0.4.2"
   },
   "devDependencies": {
-    "@babel/cli": "^7.6.4",
-    "@babel/core": "^7.6.4",
-    "@babel/preset-env": "^7.6.3",
-    "@babel/register": "^7.6.2",
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.11.4",
+    "@babel/preset-env": "^7.11.0",
+    "@babel/register": "^7.10.5",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^6.6.0",
-    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-plugin-import": "^2.18.2",
-    "mocha": "^6.2.2"
+    "eslint-plugin-import": "^2.22.0",
+    "mocha": "^6.2.3"
   }
 }
