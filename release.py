@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Release script for ps4-waker
 #
@@ -7,13 +7,13 @@ import datetime
 from collections import OrderedDict
 
 try:
-    from hostage import *
+    from hostage import *  #pylint: disable=unused-wildcard-import,wildcard-import
 except ImportError:
-    print "!! Release library unavailable."
-    print "!! Use `pip install hostage` to fix."
-    print "!! You will also need an API token in .github.token,"
-    print "!!  a .hubrrc config, or `brew install hub` configured."
-    print "!! A $GITHUB_TOKEN env variable will also work."
+    print("!! Release library unavailable.")
+    print("!! Use `pip install hostage` to fix.")
+    print("!! You will also need an API token in .github.token,")
+    print("!!  a .hubrrc config, or `brew install hub` configured.")
+    print("!! A $GITHUB_TOKEN env variable will also work.")
     exit(1)
 
 #
@@ -21,12 +21,12 @@ except ImportError:
 #
 
 notes = File(".last-release-notes")
-latestTag = git.Tag.latest()
+latestTag = git.Tag.latest(branch = 'main')
 
 def formatIssue(issue):
     return "- {title} (#{number})\n".format(
             number=issue.number,
-            title=issue.title.encode('utf-8'))
+            title=issue.title)
 
 def buildLabeled(labelsToTitles):
     """Given a set of (label, title) tuples, produces an
@@ -68,15 +68,16 @@ def buildDefaultNotes(_):
     if closedIssues:
         for issue in closedIssues:
             found = False
-            for label in labeled.iterkeys():
+            for label in labeled.keys():
                 if label in issue.labels:
                     labeled[label]['content'] += formatIssue(issue)
                     found = True
                     break
-            if not found:
+
+            if not found and 'helpme' not in issue.labels:
                 labeled['_default']['content'] += formatIssue(issue)
 
-    for labeledIssueInfo in labeled.itervalues():
+    for labeledIssueInfo in labeled.values():
         if labeledIssueInfo['content']:
             contents += "\n**{title}**:\n{content}".format(**labeledIssueInfo)
 
@@ -124,7 +125,7 @@ verify(Execute('npm publish')).succeeds(silent=False)
 # Upload to github
 #
 
-print "Uploading to Github..."
+print("Uploading to Github...")
 
 verify(versionTag).create()
 verify(versionTag).push("origin")
